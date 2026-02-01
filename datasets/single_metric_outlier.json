@@ -2,7 +2,8 @@
   "metadata": { "scenario": "single_metric_outlier" },
 
   "nodes": [
-    { "id": "N0" }, { "id": "N1" }
+    { "id": "N0", "name": "StreamServer" },
+    { "id": "N1", "name": "ProcessingNode" }
   ],
 
   "topics": [
@@ -20,14 +21,21 @@
   ],
 
   "applications": [
-    { "id": "A0" },
-    { "id": "A1" }, { "id": "A2" }, { "id": "A3" }, { "id": "A4" },
-    { "id": "A5" }, { "id": "A6" }, { "id": "A7" }, { "id": "A8" },
-    { "id": "A9" }, { "id": "A10" }
+    { "id": "A0", "name": "StreamProducer" },
+    { "id": "A1", "name": "CommandController" },
+    { "id": "A2", "name": "HealthMonitor" },
+    { "id": "A3", "name": "RemoteController" },
+    { "id": "A4", "name": "StartHandler" },
+    { "id": "A5", "name": "StopHandler" },
+    { "id": "A6", "name": "StatusReporter" },
+    { "id": "A7", "name": "StatusDisplay" },
+    { "id": "A8", "name": "StartListener" },
+    { "id": "A9", "name": "StopListener" },
+    { "id": "A10", "name": "HealthDisplay" }
   ],
 
   "libraries": [
-    { "id": "L0" }
+    { "id": "L0", "name": "libstream" }
   ],
 
   "relationships": {
@@ -54,7 +62,6 @@
       { "from": "A0", "to": "T5" },
       { "from": "A0", "to": "T6" },
       { "from": "A0", "to": "T7" },
-
       { "from": "A1", "to": "T8" },
       { "from": "A1", "to": "T9" },
       { "from": "A2", "to": "T10" },

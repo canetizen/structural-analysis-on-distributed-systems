@@ -2,7 +2,9 @@
   "metadata": { "scenario": "context_diversity_comparison" },
 
   "nodes": [
-    { "id": "N0" }, { "id": "N1" }, { "id": "N2" }
+    { "id": "N0", "name": "IntegrationServer" },
+    { "id": "N1", "name": "ProcessingNode1" },
+    { "id": "N2", "name": "ProcessingNode2" }
   ],
 
   "topics": [
@@ -20,15 +22,24 @@
   ],
 
   "applications": [
-    { "id": "A0" },
-    { "id": "A1" },
-    { "id": "A2" }, { "id": "A3" }, { "id": "A4" }, { "id": "A5" },
-    { "id": "A6" }, { "id": "A7" }, { "id": "A8" }, { "id": "A9" },
-    { "id": "A10" }, { "id": "A11" }, { "id": "A12" }
+    { "id": "A0", "name": "IntegrationHub" },
+    { "id": "A1", "name": "NavProcessor" },
+    { "id": "A2", "name": "NavDisplay" },
+    { "id": "A3", "name": "SensorBridge" },
+    { "id": "A4", "name": "WeaponsBridge" },
+    { "id": "A5", "name": "WeaponsArm" },
+    { "id": "A6", "name": "LogBridge" },
+    { "id": "A7", "name": "SensorClient" },
+    { "id": "A8", "name": "CommsRelay" },
+    { "id": "A9", "name": "WeaponsClient" },
+    { "id": "A10", "name": "LogReporter" },
+    { "id": "A11", "name": "EventDisplay" },
+    { "id": "A12", "name": "NavClient" }
   ],
 
   "libraries": [
-    { "id": "L0" }, { "id": "L1" }
+    { "id": "L0", "name": "libintegration" },
+    { "id": "L1", "name": "libbridge" }
   ],
 
   "relationships": {
@@ -54,11 +65,9 @@
       { "from": "A0", "to": "T5" },
       { "from": "A0", "to": "T7" },
       { "from": "A0", "to": "T9" },
-
       { "from": "A1", "to": "T0" },
       { "from": "A1", "to": "T1" },
       { "from": "A1", "to": "T2" },
-
       { "from": "A2", "to": "T0" },
       { "from": "A3", "to": "T3" },
       { "from": "A4", "to": "T5" },
@@ -70,9 +79,7 @@
     "subscribes_to": [
       { "from": "A0", "to": "T4" },
       { "from": "A0", "to": "T6" },
-
       { "from": "A1", "to": "T9" },
-
       { "from": "A2", "to": "T1" },
       { "from": "A3", "to": "T0" },
       { "from": "A4", "to": "T3" },

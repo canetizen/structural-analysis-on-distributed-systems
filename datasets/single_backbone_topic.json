@@ -2,7 +2,9 @@
   "metadata": { "scenario": "single_backbone_topic" },
 
   "nodes": [
-    { "id": "N0" }, { "id": "N1" }, { "id": "N2" }
+    { "id": "N0", "name": "PrimaryNode" },
+    { "id": "N1", "name": "SecondaryNode" },
+    { "id": "N2", "name": "TertiaryNode" }
   ],
 
   "topics": [
@@ -18,13 +20,23 @@
   ],
 
   "applications": [
-    { "id": "A0" }, { "id": "A1" }, { "id": "A2" }, { "id": "A3" },
-    { "id": "A4" }, { "id": "A5" }, { "id": "A6" }, { "id": "A7" },
-    { "id": "A8" }, { "id": "A9" }, { "id": "A10" }, { "id": "A11" }
+    { "id": "A0", "name": "SyncMaster" },
+    { "id": "A1", "name": "SyncSlave1" },
+    { "id": "A2", "name": "SyncSlave2" },
+    { "id": "A3", "name": "LogWriter" },
+    { "id": "A4", "name": "DataProcessor1" },
+    { "id": "A5", "name": "DataProcessor2" },
+    { "id": "A6", "name": "DebugMonitor" },
+    { "id": "A7", "name": "ConfigManager" },
+    { "id": "A8", "name": "StateManager" },
+    { "id": "A9", "name": "ConfigClient" },
+    { "id": "A10", "name": "HeartbeatMonitor" },
+    { "id": "A11", "name": "HeartbeatSender" }
   ],
 
   "libraries": [
-    { "id": "L0" }, { "id": "L1" }
+    { "id": "L0", "name": "libsync" },
+    { "id": "L1", "name": "liblog" }
   ],
 
   "relationships": {
@@ -52,7 +64,6 @@
       { "from": "A8", "to": "T0" },
       { "from": "A9", "to": "T0" },
       { "from": "A10", "to": "T0" },
-
       { "from": "A3", "to": "T2" },
       { "from": "A6", "to": "T5" },
       { "from": "A7", "to": "T7" },
@@ -72,7 +83,6 @@
       { "from": "A7", "to": "T0" },
       { "from": "A8", "to": "T0" },
       { "from": "A11", "to": "T0" },
-
       { "from": "A2", "to": "T2" },
       { "from": "A5", "to": "T5" },
       { "from": "A9", "to": "T7" },

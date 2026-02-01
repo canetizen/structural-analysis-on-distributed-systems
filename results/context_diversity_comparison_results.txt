@@ -1,6 +1,68 @@
 === context_diversity_comparison.json ===
 ============================================================
 
+FINDINGS SUMMARY (Top-3)
+------------------------------------------------------------
+======================================================================
+TOP 3 HIGHEST SCORING APPLICATIONS
+======================================================================
+
+▶ A3 (Score: 0.687)
+  Triggered patterns: WR, RS, CS, SD
+    • WR: Wide Reach: High R (reaches many apps) + High A (with few channels)
+    • RS: Role Specialization: High RA (publisher or subscriber dominant)
+    • CS: Context Spread: High TC (uses topics in many different categories)
+    • SD: Shared Dependency: High LE (uses many shared libraries)
+
+▶ A0 (Score: 0.567)
+  Triggered patterns: RS, CS, SD
+    • RS: Role Specialization: High RA (publisher or subscriber dominant)
+    • CS: Context Spread: High TC (uses topics in many different categories)
+    • SD: Shared Dependency: High LE (uses many shared libraries)
+
+▶ A4 (Score: 0.547)
+  Triggered patterns: WR, RS, CS, SD
+    • WR: Wide Reach: High R (reaches many apps) + High A (with few channels)
+    • RS: Role Specialization: High RA (publisher or subscriber dominant)
+    • CS: Context Spread: High TC (uses topics in many different categories)
+    • SD: Shared Dependency: High LE (uses many shared libraries)
+
+======================================================================
+TOP 3 HIGHEST SCORING TOPICS
+======================================================================
+
+▶ T6 (Score: 0.423)
+  Triggered patterns: DC
+    • DC: Directional Concentration: High I (unidirectional: broadcast/collector)
+
+▶ T4 (Score: 0.423)
+  Triggered patterns: DC
+    • DC: Directional Concentration: High I (unidirectional: broadcast/collector)
+
+▶ T2 (Score: 0.423)
+  Triggered patterns: DC
+    • DC: Directional Concentration: High I (unidirectional: broadcast/collector)
+
+======================================================================
+TOP 3 HIGHEST SCORING NODES
+======================================================================
+
+▶ N0 (Score: 1.180)
+  Triggered pattern: IH
+    • IH: Interaction Hub: High ND (many apps) + High NID (many internal interactions)
+
+======================================================================
+SUMMARY STATISTICS
+======================================================================
+  Total applications: 13, pattern triggered: 13 (100.0%)
+  Total topics: 11, pattern triggered: 7 (63.6%)
+  Total nodes: 3, pattern triggered: 1 (33.3%)
+
+
+============================================================
+RAW DATA
+============================================================
+
 APPLICATIONS
 ------------------------------------------------------------
  id    Score     OS_P      UNI    WR   RS    CS   SD

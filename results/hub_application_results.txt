@@ -1,6 +1,68 @@
 === hub_application.json ===
 ============================================================
 
+FINDINGS SUMMARY (Top-3)
+------------------------------------------------------------
+======================================================================
+TOP 3 HIGHEST SCORING APPLICATIONS
+======================================================================
+
+▶ A0 (Score: 0.943)
+  Triggered patterns: WR, RS, CS, SD
+    • WR: Wide Reach: High R (reaches many apps) + High A (with few channels)
+    • RS: Role Specialization: High RA (publisher or subscriber dominant)
+    • CS: Context Spread: High TC (uses topics in many different categories)
+    • SD: Shared Dependency: High LE (uses many shared libraries)
+
+▶ A1 (Score: 0.598)
+  Triggered patterns: WR, RS, CS, SD
+    • WR: Wide Reach: High R (reaches many apps) + High A (with few channels)
+    • RS: Role Specialization: High RA (publisher or subscriber dominant)
+    • CS: Context Spread: High TC (uses topics in many different categories)
+    • SD: Shared Dependency: High LE (uses many shared libraries)
+
+▶ A2 (Score: 0.598)
+  Triggered patterns: WR, RS, CS, SD
+    • WR: Wide Reach: High R (reaches many apps) + High A (with few channels)
+    • RS: Role Specialization: High RA (publisher or subscriber dominant)
+    • CS: Context Spread: High TC (uses topics in many different categories)
+    • SD: Shared Dependency: High LE (uses many shared libraries)
+
+======================================================================
+TOP 3 HIGHEST SCORING TOPICS
+======================================================================
+
+▶ T0 (Score: 0.603)
+  Triggered patterns: DC
+    • DC: Directional Concentration: High I (unidirectional: broadcast/collector)
+
+▶ T2 (Score: 0.423)
+  Triggered patterns: DC
+    • DC: Directional Concentration: High I (unidirectional: broadcast/collector)
+
+▶ T5 (Score: 0.423)
+  Triggered patterns: DC
+    • DC: Directional Concentration: High I (unidirectional: broadcast/collector)
+
+======================================================================
+TOP 3 HIGHEST SCORING NODES
+======================================================================
+
+▶ N0 (Score: 0.090)
+  No pattern triggered (UNI contribution only)
+
+======================================================================
+SUMMARY STATISTICS
+======================================================================
+  Total applications: 15, pattern triggered: 15 (100.0%)
+  Total topics: 12, pattern triggered: 3 (25.0%)
+  Total nodes: 4, pattern triggered: 0 (0.0%)
+
+
+============================================================
+RAW DATA
+============================================================
+
 APPLICATIONS
 ------------------------------------------------------------
  id    Score     OS_P      UNI    WR   RS    CS   SD

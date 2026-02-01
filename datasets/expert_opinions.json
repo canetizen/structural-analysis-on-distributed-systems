@@ -1,0 +1,74 @@
+{
+  "hub_application": {
+    "applications": [
+      "CentralController",
+      "TrackManager",
+      "TrackDisplay",
+      "SystemLogger",
+      "RadarInterface"
+    ],
+    "topics": [
+      "nav.track.update",
+      "nav.track.create",
+      "sensor.radar.contact"
+    ],
+    "nodes": [
+      "MainServer"
+    ]
+  },
+
+  "single_backbone_topic": {
+    "applications": [
+      "SyncMaster",
+      "SyncSlave1",
+      "DataProcessor1",
+      "StateManager",
+      "LogWriter"
+    ],
+    "topics": [
+      "core.sync.state",
+      "config.update.notify",
+      "core.sync.heartbeat"
+    ],
+    "nodes": [
+      "PrimaryNode"
+    ]
+  },
+
+  "single_metric_outlier": {
+    "applications": [
+      "StreamProducer",
+      "CommandController",
+      "HealthMonitor",
+      "RemoteController",
+      "StatusReporter"
+    ],
+    "topics": [
+      "monitor.health.status",
+      "control.cmd.start",
+      "control.cmd.stop"
+    ],
+    "nodes": [
+      "StreamServer"
+    ]
+  },
+
+  "context_diversity_comparison": {
+    "applications": [
+      "IntegrationHub",
+      "SensorBridge",
+      "WeaponsBridge",
+      "NavProcessor",
+      "LogBridge"
+    ],
+    "topics": [
+      "nav.track.update",
+      "weapons.control.fire",
+      "sensor.fusion.filtered",
+      "log.system.error"
+    ],
+    "nodes": [
+      "IntegrationServer"
+    ]
+  }
+}

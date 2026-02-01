@@ -340,7 +340,102 @@ def analyze_dataset(path):
     return apps_df, topics_df, nodes_df
 
 
-def write_results(path, apps_df, topics_df, nodes_df, output_dir):
+# =============================
+# PATTERN EXPLANATIONS
+# =============================
+
+PATTERN_EXPLANATIONS = {
+    "WR": "Wide Reach: High R (reaches many apps) + High A (with few channels)",
+    "RS": "Role Specialization: High RA (publisher or subscriber dominant)",
+    "CS": "Context Spread: High TC (uses topics in many different categories)",
+    "SD": "Shared Dependency: High LE (uses many shared libraries)",
+    "CB": "Communication Backbone: High C (many connections) + Low I (balanced)",
+    "DC": "Directional Concentration: High I (unidirectional: broadcast/collector)",
+    "IH": "Interaction Hub: High ND (many apps) + High NID (many internal interactions)",
+}
+
+
+def generate_findings(apps_df, topics_df, nodes_df, top_k):
+    """Generate human-readable findings summary."""
+    findings = []
+    
+    # Top-K applications
+    apps_sorted = apps_df.sort_values("Score", ascending=False).head(top_k)
+    if len(apps_sorted) > 0:
+        findings.append("=" * 70)
+        findings.append(f"TOP {min(top_k, len(apps_sorted))} HIGHEST SCORING APPLICATIONS")
+        findings.append("=" * 70)
+        
+        for _, row in apps_sorted.iterrows():
+            if row["Score"] > 0:
+                findings.append(f"\n▶ {row['id']} (Score: {row['Score']:.3f})")
+                patterns = []
+                if row.get("WR"): patterns.append("WR")
+                if row.get("RS"): patterns.append("RS")
+                if row.get("CS"): patterns.append("CS")
+                if row.get("SD"): patterns.append("SD")
+                
+                if patterns:
+                    findings.append(f"  Triggered patterns: {', '.join(patterns)}")
+                    for p in patterns:
+                        findings.append(f"    • {p}: {PATTERN_EXPLANATIONS[p]}")
+                else:
+                    findings.append("  No pattern triggered (UNI contribution only)")
+    
+    # Top-K topics
+    topics_sorted = topics_df.sort_values("Score", ascending=False).head(top_k)
+    if len(topics_sorted) > 0:
+        findings.append("\n" + "=" * 70)
+        findings.append(f"TOP {min(top_k, len(topics_sorted))} HIGHEST SCORING TOPICS")
+        findings.append("=" * 70)
+        
+        for _, row in topics_sorted.iterrows():
+            if row["Score"] > 0:
+                findings.append(f"\n▶ {row['id']} (Score: {row['Score']:.3f})")
+                patterns = []
+                if row.get("CB"): patterns.append("CB")
+                if row.get("DC"): patterns.append("DC")
+                
+                if patterns:
+                    findings.append(f"  Triggered patterns: {', '.join(patterns)}")
+                    for p in patterns:
+                        findings.append(f"    • {p}: {PATTERN_EXPLANATIONS[p]}")
+                else:
+                    findings.append("  No pattern triggered (UNI contribution only)")
+    
+    # Top-K nodes
+    nodes_sorted = nodes_df.sort_values("Score", ascending=False).head(top_k)
+    if len(nodes_sorted) > 0:
+        findings.append("\n" + "=" * 70)
+        findings.append(f"TOP {min(top_k, len(nodes_sorted))} HIGHEST SCORING NODES")
+        findings.append("=" * 70)
+        
+        for _, row in nodes_sorted.iterrows():
+            if row["Score"] > 0:
+                findings.append(f"\n▶ {row['id']} (Score: {row['Score']:.3f})")
+                if row.get("IH"):
+                    findings.append(f"  Triggered pattern: IH")
+                    findings.append(f"    • IH: {PATTERN_EXPLANATIONS['IH']}")
+                else:
+                    findings.append("  No pattern triggered (UNI contribution only)")
+    
+    # Summary statistics
+    findings.append("\n" + "=" * 70)
+    findings.append("SUMMARY STATISTICS")
+    findings.append("=" * 70)
+    
+    app_with_pattern = len(apps_df[(apps_df["WR"]) | (apps_df["RS"]) | (apps_df["CS"]) | (apps_df["SD"])])
+    topic_with_pattern = len(topics_df[(topics_df["CB"]) | (topics_df["DC"])])
+    node_with_pattern = len(nodes_df[nodes_df["IH"]])
+    
+    findings.append(f"  Total applications: {len(apps_df)}, pattern triggered: {app_with_pattern} ({100*app_with_pattern/len(apps_df):.1f}%)")
+    findings.append(f"  Total topics: {len(topics_df)}, pattern triggered: {topic_with_pattern} ({100*topic_with_pattern/len(topics_df):.1f}%)")
+    findings.append(f"  Total nodes: {len(nodes_df)}, pattern triggered: {node_with_pattern} ({100*node_with_pattern/len(nodes_df):.1f}%)")
+    
+    return "\n".join(findings)
+
+
+def write_results(path, apps_df, topics_df, nodes_df, output_dir, top_k):
     """Write analysis results to a text file."""
     output_dir.mkdir(parents=True, exist_ok=True)
     output_file = output_dir / f"{path.stem}_results.txt"
@@ -348,6 +443,17 @@ def write_results(path, apps_df, topics_df, nodes_df, output_dir):
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(f"=== {path.name} ===\n")
         f.write(f"{'='*60}\n\n")
+
+        # Findings summary
+        f.write("FINDINGS SUMMARY (Top-{})\n".format(top_k))
+        f.write("-" * 60 + "\n")
+        f.write(generate_findings(apps_df, topics_df, nodes_df, top_k))
+        f.write("\n\n")
+
+        # Raw data
+        f.write("\n" + "=" * 60 + "\n")
+        f.write("RAW DATA\n")
+        f.write("=" * 60 + "\n\n")
 
         f.write("APPLICATIONS\n")
         f.write("-" * 60 + "\n")
@@ -381,19 +487,38 @@ def write_results(path, apps_df, topics_df, nodes_df, output_dir):
 # =============================
 
 def main():
-    if len(sys.argv) != 2:
-        print("Usage: python structural_analysis.py <dataset_dir>")
-        sys.exit(1)
-
-    base = Path(sys.argv[1])
+    import argparse
+    
+    parser = argparse.ArgumentParser(
+        description="Publish-Subscribe Structural Analysis Tool",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Example usage:
+  python structural_analysis.py datasets/           # Analyze all JSON files
+  python structural_analysis.py datasets/ -k 5      # Show top 5 results
+  python structural_analysis.py datasets/ --top 3   # Show top 3 results
+        """
+    )
+    parser.add_argument("dataset_dir", help="Directory containing JSON dataset files")
+    parser.add_argument("-k", "--top", type=int, default=5, 
+                        help="Maximum number of results per category (default: 5)")
+    
+    args = parser.parse_args()
+    
+    base = Path(args.dataset_dir)
     output_dir = base.parent / "results"
+    top_k = args.top
 
     print(f"Analyzing datasets in: {base}")
-    print(f"Results will be saved to: {output_dir}\n")
+    print(f"Results will be saved to: {output_dir}")
+    print(f"Top-K: {top_k}\n")
 
     for json_file in sorted(base.glob("*.json")):
+        # Skip expert_opinions.json
+        if "expert" in json_file.name.lower():
+            continue
         apps_df, topics_df, nodes_df = analyze_dataset(json_file)
-        output_file = write_results(json_file, apps_df, topics_df, nodes_df, output_dir)
+        output_file = write_results(json_file, apps_df, topics_df, nodes_df, output_dir, top_k)
         print(f"✓ {json_file.name} → {output_file.name}")
 
 

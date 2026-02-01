@@ -1,6 +1,69 @@
 === single_metric_outlier.json ===
 ============================================================
 
+FINDINGS SUMMARY (Top-3)
+------------------------------------------------------------
+======================================================================
+TOP 3 HIGHEST SCORING APPLICATIONS
+======================================================================
+
+▶ A1 (Score: 0.865)
+  Triggered patterns: WR, RS, CS, SD
+    • WR: Wide Reach: High R (reaches many apps) + High A (with few channels)
+    • RS: Role Specialization: High RA (publisher or subscriber dominant)
+    • CS: Context Spread: High TC (uses topics in many different categories)
+    • SD: Shared Dependency: High LE (uses many shared libraries)
+
+▶ A6 (Score: 0.691)
+  Triggered patterns: WR, RS, CS, SD
+    • WR: Wide Reach: High R (reaches many apps) + High A (with few channels)
+    • RS: Role Specialization: High RA (publisher or subscriber dominant)
+    • CS: Context Spread: High TC (uses topics in many different categories)
+    • SD: Shared Dependency: High LE (uses many shared libraries)
+
+▶ A3 (Score: 0.691)
+  Triggered patterns: WR, RS, CS, SD
+    • WR: Wide Reach: High R (reaches many apps) + High A (with few channels)
+    • RS: Role Specialization: High RA (publisher or subscriber dominant)
+    • CS: Context Spread: High TC (uses topics in many different categories)
+    • SD: Shared Dependency: High LE (uses many shared libraries)
+
+======================================================================
+TOP 3 HIGHEST SCORING TOPICS
+======================================================================
+
+▶ T10 (Score: 0.513)
+  Triggered patterns: CB
+    • CB: Communication Backbone: High C (many connections) + Low I (balanced)
+
+▶ T9 (Score: 0.513)
+  Triggered patterns: CB
+    • CB: Communication Backbone: High C (many connections) + Low I (balanced)
+
+▶ T8 (Score: 0.513)
+  Triggered patterns: CB
+    • CB: Communication Backbone: High C (many connections) + Low I (balanced)
+
+======================================================================
+TOP 2 HIGHEST SCORING NODES
+======================================================================
+
+▶ N0 (Score: 1.180)
+  Triggered pattern: IH
+    • IH: Interaction Hub: High ND (many apps) + High NID (many internal interactions)
+
+======================================================================
+SUMMARY STATISTICS
+======================================================================
+  Total applications: 11, pattern triggered: 11 (100.0%)
+  Total topics: 11, pattern triggered: 11 (100.0%)
+  Total nodes: 2, pattern triggered: 1 (50.0%)
+
+
+============================================================
+RAW DATA
+============================================================
+
 APPLICATIONS
 ------------------------------------------------------------
  id    Score     OS_P     UNI    WR    RS    CS   SD

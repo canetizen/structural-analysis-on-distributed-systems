@@ -1,6 +1,66 @@
 === single_backbone_topic.json ===
 ============================================================
 
+FINDINGS SUMMARY (Top-3)
+------------------------------------------------------------
+======================================================================
+TOP 3 HIGHEST SCORING APPLICATIONS
+======================================================================
+
+▶ A0 (Score: 0.267)
+  Triggered patterns: RS, CS, SD
+    • RS: Role Specialization: High RA (publisher or subscriber dominant)
+    • CS: Context Spread: High TC (uses topics in many different categories)
+    • SD: Shared Dependency: High LE (uses many shared libraries)
+
+▶ A1 (Score: 0.267)
+  Triggered patterns: RS, CS, SD
+    • RS: Role Specialization: High RA (publisher or subscriber dominant)
+    • CS: Context Spread: High TC (uses topics in many different categories)
+    • SD: Shared Dependency: High LE (uses many shared libraries)
+
+▶ A3 (Score: 0.267)
+  Triggered patterns: RS, CS, SD
+    • RS: Role Specialization: High RA (publisher or subscriber dominant)
+    • CS: Context Spread: High TC (uses topics in many different categories)
+    • SD: Shared Dependency: High LE (uses many shared libraries)
+
+======================================================================
+TOP 3 HIGHEST SCORING TOPICS
+======================================================================
+
+▶ T0 (Score: 0.380)
+  Triggered patterns: CB
+    • CB: Communication Backbone: High C (many connections) + Low I (balanced)
+
+▶ T7 (Score: 0.290)
+  Triggered patterns: CB
+    • CB: Communication Backbone: High C (many connections) + Low I (balanced)
+
+▶ T4 (Score: 0.250)
+  Triggered patterns: DC
+    • DC: Directional Concentration: High I (unidirectional: broadcast/collector)
+
+======================================================================
+TOP 3 HIGHEST SCORING NODES
+======================================================================
+
+▶ N0 (Score: 1.090)
+  Triggered pattern: IH
+    • IH: Interaction Hub: High ND (many apps) + High NID (many internal interactions)
+
+======================================================================
+SUMMARY STATISTICS
+======================================================================
+  Total applications: 12, pattern triggered: 12 (100.0%)
+  Total topics: 9, pattern triggered: 9 (100.0%)
+  Total nodes: 3, pattern triggered: 1 (33.3%)
+
+
+============================================================
+RAW DATA
+============================================================
+
 APPLICATIONS
 ------------------------------------------------------------
  id    Score     OS_P  UNI    WR   RS    CS   SD
