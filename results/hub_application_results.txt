@@ -1,0 +1,45 @@
+=== hub_application.json ===
+============================================================
+
+APPLICATIONS
+------------------------------------------------------------
+ id    Score     OS_P      UNI    WR   RS    CS   SD
+ A0 0.943333 0.583333 1.200000  True True  True True
+ A1 0.597619 0.583333 0.047619  True True  True True
+ A2 0.597619 0.583333 0.047619  True True  True True
+A13 0.516190 0.383333 0.442857  True True False True
+ A5 0.333333 0.333333 0.000000 False True  True True
+ A9 0.333333 0.333333 0.000000 False True  True True
+A10 0.133333 0.133333 0.000000 False True False True
+A14 0.133333 0.133333 0.000000 False True False True
+A12 0.133333 0.133333 0.000000 False True False True
+A11 0.133333 0.133333 0.000000 False True False True
+ A3 0.133333 0.133333 0.000000 False True False True
+ A4 0.133333 0.133333 0.000000 False True False True
+ A6 0.133333 0.133333 0.000000 False True False True
+ A7 0.133333 0.133333 0.000000 False True False True
+ A8 0.133333 0.133333 0.000000 False True False True
+
+TOPICS
+------------------------------------------------------------
+ id    Score     OS_P  UNI    CB    DC
+ T0 0.603333 0.333333  0.9 False  True
+ T2 0.423333 0.333333  0.3 False  True
+ T5 0.423333 0.333333  0.3 False  True
+ T3 0.090000 0.000000  0.3 False False
+ T6 0.090000 0.000000  0.3 False False
+T11 0.000000 0.000000  0.0 False False
+ T1 0.000000 0.000000  0.0 False False
+T10 0.000000 0.000000  0.0 False False
+ T4 0.000000 0.000000  0.0 False False
+ T7 0.000000 0.000000  0.0 False False
+ T8 0.000000 0.000000  0.0 False False
+ T9 0.000000 0.000000  0.0 False False
+
+NODES
+------------------------------------------------------------
+id  Score  OS_P  UNI    IH
+N0   0.09   0.0  0.3 False
+N1   0.00   0.0  0.0 False
+N2   0.00   0.0  0.0 False
+N3   0.00   0.0  0.0 False

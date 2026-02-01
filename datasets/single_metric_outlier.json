@@ -1,32 +1,48 @@
 {
-  "metadata": { "scenario": "single_metric_outlier_tc" },
+  "metadata": { "scenario": "single_metric_outlier" },
 
   "nodes": [
-    { "id": "N0" }
+    { "id": "N0" }, { "id": "N1" }
   ],
 
   "topics": [
-    { "id": "T0", "name": "stream.data.part1" },
-    { "id": "T1", "name": "stream.data.part2" },
-    { "id": "T2", "name": "stream.data.part3" },
-    { "id": "T3", "name": "stream.data.part4" },
-    { "id": "T4", "name": "stream.data.part5" }
+    { "id": "T0", "name": "stream.data.chunk1" },
+    { "id": "T1", "name": "stream.data.chunk2" },
+    { "id": "T2", "name": "stream.data.chunk3" },
+    { "id": "T3", "name": "stream.data.chunk4" },
+    { "id": "T4", "name": "stream.data.chunk5" },
+    { "id": "T5", "name": "stream.data.chunk6" },
+    { "id": "T6", "name": "stream.data.chunk7" },
+    { "id": "T7", "name": "stream.data.chunk8" },
+    { "id": "T8", "name": "control.cmd.start" },
+    { "id": "T9", "name": "control.cmd.stop" },
+    { "id": "T10", "name": "monitor.health.status" }
   ],
 
   "applications": [
     { "id": "A0" },
-    { "id": "A1" }, { "id": "A2" }, { "id": "A3" }, { "id": "A4" }
+    { "id": "A1" }, { "id": "A2" }, { "id": "A3" }, { "id": "A4" },
+    { "id": "A5" }, { "id": "A6" }, { "id": "A7" }, { "id": "A8" },
+    { "id": "A9" }, { "id": "A10" }
   ],
 
-  "libraries": [],
+  "libraries": [
+    { "id": "L0" }
+  ],
 
   "relationships": {
     "runs_on": [
       { "from": "A0", "to": "N0" },
       { "from": "A1", "to": "N0" },
       { "from": "A2", "to": "N0" },
-      { "from": "A3", "to": "N0" },
-      { "from": "A4", "to": "N0" }
+      { "from": "A3", "to": "N1" },
+      { "from": "A4", "to": "N1" },
+      { "from": "A5", "to": "N1" },
+      { "from": "A6", "to": "N0" },
+      { "from": "A7", "to": "N0" },
+      { "from": "A8", "to": "N1" },
+      { "from": "A9", "to": "N1" },
+      { "from": "A10", "to": "N0" }
     ],
 
     "publishes_to": [
@@ -34,7 +50,36 @@
       { "from": "A0", "to": "T1" },
       { "from": "A0", "to": "T2" },
       { "from": "A0", "to": "T3" },
-      { "from": "A0", "to": "T4" }
+      { "from": "A0", "to": "T4" },
+      { "from": "A0", "to": "T5" },
+      { "from": "A0", "to": "T6" },
+      { "from": "A0", "to": "T7" },
+
+      { "from": "A1", "to": "T8" },
+      { "from": "A1", "to": "T9" },
+      { "from": "A2", "to": "T10" },
+      { "from": "A3", "to": "T8" },
+      { "from": "A6", "to": "T10" }
+    ],
+
+    "subscribes_to": [
+      { "from": "A1", "to": "T10" },
+      { "from": "A2", "to": "T8" },
+      { "from": "A2", "to": "T9" },
+      { "from": "A3", "to": "T10" },
+      { "from": "A4", "to": "T8" },
+      { "from": "A5", "to": "T9" },
+      { "from": "A6", "to": "T8" },
+      { "from": "A7", "to": "T10" },
+      { "from": "A8", "to": "T8" },
+      { "from": "A9", "to": "T9" },
+      { "from": "A10", "to": "T10" }
+    ],
+
+    "uses": [
+      { "from": "A0", "to": "L0" },
+      { "from": "A1", "to": "L0" },
+      { "from": "A2", "to": "L0" }
     ]
   }
 }

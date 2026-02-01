@@ -213,8 +213,8 @@ def apply_relative_flags(df, metrics):
     for metric in metrics:
         q1 = df[metric].quantile(0.25)
         q3 = df[metric].quantile(0.75)
-        df[f"{metric}_up"] = df[metric] > q3
-        df[f"{metric}_down"] = df[metric] < q1
+        df[f"{metric}_up"] = df[metric] >= q3
+        df[f"{metric}_down"] = df[metric] <= q1
     return df
 
 
@@ -337,21 +337,43 @@ def analyze_dataset(path):
     topics_df = finalize_score(topics_df)
     nodes_df = finalize_score(nodes_df)
 
-    print("\n===", path.name, "===")
-    print("\nApplications:")
-    print(apps_df.sort_values("Score", ascending=False)[
-        ["id", "Score", "OS_P", "UNI", "WR", "RS", "CS", "SD"]
-    ])
+    return apps_df, topics_df, nodes_df
 
-    print("\nTopics:")
-    print(topics_df.sort_values("Score", ascending=False)[
-        ["id", "Score", "OS_P", "UNI", "CB", "DC"]
-    ])
 
-    print("\nNodes:")
-    print(nodes_df.sort_values("Score", ascending=False)[
-        ["id", "Score", "OS_P", "UNI", "IH"]
-    ])
+def write_results(path, apps_df, topics_df, nodes_df, output_dir):
+    """Write analysis results to a text file."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_file = output_dir / f"{path.stem}_results.txt"
+
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write(f"=== {path.name} ===\n")
+        f.write(f"{'='*60}\n\n")
+
+        f.write("APPLICATIONS\n")
+        f.write("-" * 60 + "\n")
+        apps_sorted = apps_df.sort_values("Score", ascending=False)
+        f.write(apps_sorted[
+            ["id", "Score", "OS_P", "UNI", "WR", "RS", "CS", "SD"]
+        ].to_string(index=False))
+        f.write("\n\n")
+
+        f.write("TOPICS\n")
+        f.write("-" * 60 + "\n")
+        topics_sorted = topics_df.sort_values("Score", ascending=False)
+        f.write(topics_sorted[
+            ["id", "Score", "OS_P", "UNI", "CB", "DC"]
+        ].to_string(index=False))
+        f.write("\n\n")
+
+        f.write("NODES\n")
+        f.write("-" * 60 + "\n")
+        nodes_sorted = nodes_df.sort_values("Score", ascending=False)
+        f.write(nodes_sorted[
+            ["id", "Score", "OS_P", "UNI", "IH"]
+        ].to_string(index=False))
+        f.write("\n")
+
+    return output_file
 
 
 # =============================
@@ -364,8 +386,15 @@ def main():
         sys.exit(1)
 
     base = Path(sys.argv[1])
+    output_dir = base.parent / "results"
+
+    print(f"Analyzing datasets in: {base}")
+    print(f"Results will be saved to: {output_dir}\n")
+
     for json_file in sorted(base.glob("*.json")):
-        analyze_dataset(json_file)
+        apps_df, topics_df, nodes_df = analyze_dataset(json_file)
+        output_file = write_results(json_file, apps_df, topics_df, nodes_df, output_dir)
+        print(f"✓ {json_file.name} → {output_file.name}")
 
 
 if __name__ == "__main__":

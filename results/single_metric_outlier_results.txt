@@ -1,0 +1,38 @@
+=== single_metric_outlier.json ===
+============================================================
+
+APPLICATIONS
+------------------------------------------------------------
+ id    Score     OS_P     UNI    WR    RS    CS   SD
+ A1 0.865284 0.690909 0.58125  True  True  True True
+ A6 0.690909 0.690909 0.00000  True  True  True True
+ A3 0.690909 0.690909 0.00000  True  True  True True
+ A2 0.590909 0.590909 0.00000  True False  True True
+ A0 0.280909 0.190909 0.30000 False  True False True
+A10 0.190909 0.190909 0.00000 False  True False True
+ A4 0.190909 0.190909 0.00000 False  True False True
+ A5 0.190909 0.190909 0.00000 False  True False True
+ A7 0.190909 0.190909 0.00000 False  True False True
+ A8 0.190909 0.190909 0.00000 False  True False True
+ A9 0.190909 0.190909 0.00000 False  True False True
+
+TOPICS
+------------------------------------------------------------
+ id    Score     OS_P  UNI    CB    DC
+T10 0.513333 0.333333  0.6  True False
+ T9 0.513333 0.333333  0.6  True False
+ T8 0.513333 0.333333  0.6  True False
+ T1 0.125000 0.125000  0.0 False  True
+ T0 0.125000 0.125000  0.0 False  True
+ T2 0.125000 0.125000  0.0 False  True
+ T3 0.125000 0.125000  0.0 False  True
+ T5 0.125000 0.125000  0.0 False  True
+ T4 0.125000 0.125000  0.0 False  True
+ T7 0.125000 0.125000  0.0 False  True
+ T6 0.125000 0.125000  0.0 False  True
+
+NODES
+------------------------------------------------------------
+id  Score  OS_P  UNI    IH
+N0   1.18   1.0  0.6  True
+N1   0.00   0.0  0.0 False

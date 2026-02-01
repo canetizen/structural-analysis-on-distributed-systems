@@ -1,24 +1,36 @@
 {
-  "metadata": { "scenario": "hub_application_tc" },
+  "metadata": { "scenario": "hub_application" },
 
   "nodes": [
-    { "id": "N0" }, { "id": "N1" }
+    { "id": "N0" }, { "id": "N1" }, { "id": "N2" }, { "id": "N3" }
   ],
 
   "topics": [
     { "id": "T0", "name": "nav.track.update" },
     { "id": "T1", "name": "nav.track.delete" },
-    { "id": "T2", "name": "sensor.fusion.raw" },
-    { "id": "T3", "name": "sensor.fusion.filtered" },
-    { "id": "T4", "name": "weapons.control.fire" }
+    { "id": "T2", "name": "nav.track.create" },
+    { "id": "T3", "name": "sensor.fusion.raw" },
+    { "id": "T4", "name": "sensor.fusion.filtered" },
+    { "id": "T5", "name": "sensor.radar.contact" },
+    { "id": "T6", "name": "weapons.control.fire" },
+    { "id": "T7", "name": "weapons.control.arm" },
+    { "id": "T8", "name": "comms.radio.transmit" },
+    { "id": "T9", "name": "comms.radio.receive" },
+    { "id": "T10", "name": "log.system.event" },
+    { "id": "T11", "name": "log.system.error" }
   ],
 
   "applications": [
     { "id": "A0" },
-    { "id": "A1" }, { "id": "A2" }, { "id": "A3" }, { "id": "A4" }
+    { "id": "A1" }, { "id": "A2" }, { "id": "A3" }, { "id": "A4" },
+    { "id": "A5" }, { "id": "A6" }, { "id": "A7" }, { "id": "A8" },
+    { "id": "A9" }, { "id": "A10" }, { "id": "A11" }, { "id": "A12" },
+    { "id": "A13" }, { "id": "A14" }
   ],
 
-  "libraries": [],
+  "libraries": [
+    { "id": "L0" }, { "id": "L1" }, { "id": "L2" }
+  ],
 
   "relationships": {
     "runs_on": [
@@ -26,21 +38,58 @@
       { "from": "A1", "to": "N1" },
       { "from": "A2", "to": "N1" },
       { "from": "A3", "to": "N1" },
-      { "from": "A4", "to": "N1" }
+      { "from": "A4", "to": "N1" },
+      { "from": "A5", "to": "N2" },
+      { "from": "A6", "to": "N2" },
+      { "from": "A7", "to": "N2" },
+      { "from": "A8", "to": "N2" },
+      { "from": "A9", "to": "N3" },
+      { "from": "A10", "to": "N3" },
+      { "from": "A11", "to": "N3" },
+      { "from": "A12", "to": "N3" },
+      { "from": "A13", "to": "N0" },
+      { "from": "A14", "to": "N0" }
     ],
 
     "publishes_to": [
       { "from": "A0", "to": "T0" },
       { "from": "A0", "to": "T1" },
-      { "from": "A0", "to": "T2" },
-      { "from": "A0", "to": "T4" }
+      { "from": "A0", "to": "T3" },
+      { "from": "A0", "to": "T4" },
+      { "from": "A0", "to": "T6" },
+      { "from": "A0", "to": "T8" },
+
+      { "from": "A1", "to": "T10" },
+      { "from": "A2", "to": "T10" },
+      { "from": "A5", "to": "T2" },
+      { "from": "A9", "to": "T5" },
+      { "from": "A13", "to": "T11" }
     ],
 
     "subscribes_to": [
       { "from": "A1", "to": "T0" },
-      { "from": "A2", "to": "T2" },
+      { "from": "A2", "to": "T0" },
       { "from": "A3", "to": "T1" },
-      { "from": "A4", "to": "T4" }
+      { "from": "A4", "to": "T3" },
+      { "from": "A5", "to": "T3" },
+      { "from": "A6", "to": "T4" },
+      { "from": "A7", "to": "T4" },
+      { "from": "A8", "to": "T6" },
+      { "from": "A9", "to": "T6" },
+      { "from": "A10", "to": "T8" },
+      { "from": "A11", "to": "T8" },
+      { "from": "A12", "to": "T0" },
+      { "from": "A13", "to": "T10" },
+      { "from": "A14", "to": "T11" }
+    ],
+
+    "uses": [
+      { "from": "A0", "to": "L0" },
+      { "from": "A0", "to": "L1" },
+      { "from": "A0", "to": "L2" },
+      { "from": "A1", "to": "L0" },
+      { "from": "A5", "to": "L1" },
+      { "from": "A9", "to": "L0" }
     ]
   }
 }

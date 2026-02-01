@@ -1,0 +1,38 @@
+=== single_backbone_topic.json ===
+============================================================
+
+APPLICATIONS
+------------------------------------------------------------
+ id    Score     OS_P  UNI    WR   RS    CS   SD
+ A0 0.266667 0.266667  0.0 False True  True True
+ A1 0.266667 0.266667  0.0 False True  True True
+ A3 0.266667 0.266667  0.0 False True  True True
+ A2 0.266667 0.266667  0.0 False True  True True
+ A6 0.266667 0.266667  0.0 False True  True True
+ A7 0.266667 0.266667  0.0 False True  True True
+ A4 0.266667 0.266667  0.0 False True  True True
+ A5 0.266667 0.266667  0.0 False True  True True
+ A8 0.266667 0.266667  0.0 False True  True True
+ A9 0.266667 0.266667  0.0 False True  True True
+A11 0.166667 0.166667  0.0 False True False True
+A10 0.166667 0.166667  0.0 False True False True
+
+TOPICS
+------------------------------------------------------------
+id  Score  OS_P  UNI    CB    DC
+T0   0.38  0.20  0.6  True False
+T7   0.29  0.20  0.3  True False
+T4   0.25  0.25  0.0 False  True
+T6   0.25  0.25  0.0 False  True
+T3   0.25  0.25  0.0 False  True
+T8   0.25  0.25  0.0 False  True
+T2   0.20  0.20  0.0  True False
+T1   0.20  0.20  0.0  True False
+T5   0.20  0.20  0.0  True False
+
+NODES
+------------------------------------------------------------
+id  Score  OS_P  UNI    IH
+N0   1.09   1.0  0.3  True
+N1   0.00   0.0  0.0 False
+N2   0.00   0.0  0.0 False
