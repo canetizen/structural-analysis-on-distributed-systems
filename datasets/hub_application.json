@@ -1,0 +1,46 @@
+{
+  "metadata": { "scenario": "hub_application_tc" },
+
+  "nodes": [
+    { "id": "N0" }, { "id": "N1" }
+  ],
+
+  "topics": [
+    { "id": "T0", "name": "nav.track.update" },
+    { "id": "T1", "name": "nav.track.delete" },
+    { "id": "T2", "name": "sensor.fusion.raw" },
+    { "id": "T3", "name": "sensor.fusion.filtered" },
+    { "id": "T4", "name": "weapons.control.fire" }
+  ],
+
+  "applications": [
+    { "id": "A0" },
+    { "id": "A1" }, { "id": "A2" }, { "id": "A3" }, { "id": "A4" }
+  ],
+
+  "libraries": [],
+
+  "relationships": {
+    "runs_on": [
+      { "from": "A0", "to": "N0" },
+      { "from": "A1", "to": "N1" },
+      { "from": "A2", "to": "N1" },
+      { "from": "A3", "to": "N1" },
+      { "from": "A4", "to": "N1" }
+    ],
+
+    "publishes_to": [
+      { "from": "A0", "to": "T0" },
+      { "from": "A0", "to": "T1" },
+      { "from": "A0", "to": "T2" },
+      { "from": "A0", "to": "T4" }
+    ],
+
+    "subscribes_to": [
+      { "from": "A1", "to": "T0" },
+      { "from": "A2", "to": "T2" },
+      { "from": "A3", "to": "T1" },
+      { "from": "A4", "to": "T4" }
+    ]
+  }
+}
