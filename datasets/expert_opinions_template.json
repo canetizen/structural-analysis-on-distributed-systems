@@ -1,0 +1,16 @@
+{
+  "your_scenario_name": {
+    "applications": [
+      "ApplicationName1",
+      "ApplicationName2",
+      "ApplicationName3"
+    ],
+    "topics": [
+      "topic.name.one",
+      "topic.name.two"
+    ],
+    "nodes": [
+      "NodeName1"
+    ]
+  }
+}

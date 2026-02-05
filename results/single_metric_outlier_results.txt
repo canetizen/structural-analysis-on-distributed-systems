@@ -1,56 +1,120 @@
 === single_metric_outlier.json ===
 ============================================================
 
-FINDINGS SUMMARY (Top-3)
+FINDINGS SUMMARY (Top-10)
 ------------------------------------------------------------
 ======================================================================
-TOP 3 HIGHEST SCORING APPLICATIONS
+TOP 10 HIGHEST SCORING APPLICATIONS
 ======================================================================
 
-▶ A1 (Score: 0.865)
+▶ CommandController (Score: 1.198)
   Triggered patterns: WR, RS, CS, SD
-    • WR: Wide Reach: High R (reaches many apps) + High A (with few channels)
-    • RS: Role Specialization: High RA (publisher or subscriber dominant)
-    • CS: Context Spread: High TC (uses topics in many different categories)
-    • SD: Shared Dependency: High LE (uses many shared libraries)
+    • WR: R≥Q3 ∧ A≥Q3 | Bu uygulama sınırlı sayıda yayın kanalıyla geniş bir uygulama kümesine ulaşıyor mu?
+    • RS: RA≥Q3 ∨ RA≤Q1 | Bu uygulama ağırlıklı olarak yayıncı veya abone rolünde yoğunlaşıyor mu?
+    • CS: TC≥Q3 | Bu uygulama birçok farklı işlevsel bağlamda (konu kategorisinde) yer alıyor mu?
+    • SD: LE≥Q3 | Bu uygulama görece yüksek sayıda ortak kütüphaneye bağımlı mı?
 
-▶ A6 (Score: 0.691)
-  Triggered patterns: WR, RS, CS, SD
-    • WR: Wide Reach: High R (reaches many apps) + High A (with few channels)
-    • RS: Role Specialization: High RA (publisher or subscriber dominant)
-    • CS: Context Spread: High TC (uses topics in many different categories)
-    • SD: Shared Dependency: High LE (uses many shared libraries)
+▶ HealthMonitor (Score: 0.923)
+  Triggered patterns: WR, CS, SD
+    • WR: R≥Q3 ∧ A≥Q3 | Bu uygulama sınırlı sayıda yayın kanalıyla geniş bir uygulama kümesine ulaşıyor mu?
+    • CS: TC≥Q3 | Bu uygulama birçok farklı işlevsel bağlamda (konu kategorisinde) yer alıyor mu?
+    • SD: LE≥Q3 | Bu uygulama görece yüksek sayıda ortak kütüphaneye bağımlı mı?
 
-▶ A3 (Score: 0.691)
-  Triggered patterns: WR, RS, CS, SD
-    • WR: Wide Reach: High R (reaches many apps) + High A (with few channels)
-    • RS: Role Specialization: High RA (publisher or subscriber dominant)
-    • CS: Context Spread: High TC (uses topics in many different categories)
-    • SD: Shared Dependency: High LE (uses many shared libraries)
+▶ StreamProducer (Score: 0.613)
+  Triggered patterns: RS, SD
+    • RS: RA≥Q3 ∨ RA≤Q1 | Bu uygulama ağırlıklı olarak yayıncı veya abone rolünde yoğunlaşıyor mu?
+    • SD: LE≥Q3 | Bu uygulama görece yüksek sayıda ortak kütüphaneye bağımlı mı?
+
+▶ RemoteController (Score: 0.600)
+  Triggered patterns: WR, RS, CS
+    • WR: R≥Q3 ∧ A≥Q3 | Bu uygulama sınırlı sayıda yayın kanalıyla geniş bir uygulama kümesine ulaşıyor mu?
+    • RS: RA≥Q3 ∨ RA≤Q1 | Bu uygulama ağırlıklı olarak yayıncı veya abone rolünde yoğunlaşıyor mu?
+    • CS: TC≥Q3 | Bu uygulama birçok farklı işlevsel bağlamda (konu kategorisinde) yer alıyor mu?
+
+▶ StatusReporter (Score: 0.600)
+  Triggered patterns: WR, RS, CS
+    • WR: R≥Q3 ∧ A≥Q3 | Bu uygulama sınırlı sayıda yayın kanalıyla geniş bir uygulama kümesine ulaşıyor mu?
+    • RS: RA≥Q3 ∨ RA≤Q1 | Bu uygulama ağırlıklı olarak yayıncı veya abone rolünde yoğunlaşıyor mu?
+    • CS: TC≥Q3 | Bu uygulama birçok farklı işlevsel bağlamda (konu kategorisinde) yer alıyor mu?
+
+▶ HealthDisplay (Score: 0.100)
+  Triggered patterns: RS
+    • RS: RA≥Q3 ∨ RA≤Q1 | Bu uygulama ağırlıklı olarak yayıncı veya abone rolünde yoğunlaşıyor mu?
+
+▶ StartHandler (Score: 0.100)
+  Triggered patterns: RS
+    • RS: RA≥Q3 ∨ RA≤Q1 | Bu uygulama ağırlıklı olarak yayıncı veya abone rolünde yoğunlaşıyor mu?
+
+▶ StopHandler (Score: 0.100)
+  Triggered patterns: RS
+    • RS: RA≥Q3 ∨ RA≤Q1 | Bu uygulama ağırlıklı olarak yayıncı veya abone rolünde yoğunlaşıyor mu?
+
+▶ StatusDisplay (Score: 0.100)
+  Triggered patterns: RS
+    • RS: RA≥Q3 ∨ RA≤Q1 | Bu uygulama ağırlıklı olarak yayıncı veya abone rolünde yoğunlaşıyor mu?
+
+▶ StartListener (Score: 0.100)
+  Triggered patterns: RS
+    • RS: RA≥Q3 ∨ RA≤Q1 | Bu uygulama ağırlıklı olarak yayıncı veya abone rolünde yoğunlaşıyor mu?
 
 ======================================================================
-TOP 3 HIGHEST SCORING TOPICS
+TOP 10 HIGHEST SCORING TOPICS
 ======================================================================
 
-▶ T10 (Score: 0.513)
-  Triggered patterns: CB
-    • CB: Communication Backbone: High C (many connections) + Low I (balanced)
+▶ monitor.health.status (Score: 0.937)
+  Triggered patterns: CB, PA
+    • CB: C≥Q3 ∧ I≤Q1 | Bu konu çok sayıda uygulamayı dengeli biçimde birbirine bağlıyor mu?
+    • PA: LCR≥Q3 | Bu konu ağırlıklı olarak düşük bağlantılı uygulamaları bir araya topluyor mu?
 
-▶ T9 (Score: 0.513)
-  Triggered patterns: CB
-    • CB: Communication Backbone: High C (many connections) + Low I (balanced)
+▶ control.cmd.start (Score: 0.937)
+  Triggered patterns: CB, PA
+    • CB: C≥Q3 ∧ I≤Q1 | Bu konu çok sayıda uygulamayı dengeli biçimde birbirine bağlıyor mu?
+    • PA: LCR≥Q3 | Bu konu ağırlıklı olarak düşük bağlantılı uygulamaları bir araya topluyor mu?
 
-▶ T8 (Score: 0.513)
-  Triggered patterns: CB
-    • CB: Communication Backbone: High C (many connections) + Low I (balanced)
+▶ control.cmd.stop (Score: 0.937)
+  Triggered patterns: CB, PA
+    • CB: C≥Q3 ∧ I≤Q1 | Bu konu çok sayıda uygulamayı dengeli biçimde birbirine bağlıyor mu?
+    • PA: LCR≥Q3 | Bu konu ağırlıklı olarak düşük bağlantılı uygulamaları bir araya topluyor mu?
+
+▶ stream.data.chunk1 (Score: 0.125)
+  Triggered patterns: DC
+    • DC: I≥Q3 | Bu konu tek yönlü iletişim örüntüsü (yayın veya abonelik ağırlıklı) sergiliyor mu?
+
+▶ stream.data.chunk2 (Score: 0.125)
+  Triggered patterns: DC
+    • DC: I≥Q3 | Bu konu tek yönlü iletişim örüntüsü (yayın veya abonelik ağırlıklı) sergiliyor mu?
+
+▶ stream.data.chunk3 (Score: 0.125)
+  Triggered patterns: DC
+    • DC: I≥Q3 | Bu konu tek yönlü iletişim örüntüsü (yayın veya abonelik ağırlıklı) sergiliyor mu?
+
+▶ stream.data.chunk4 (Score: 0.125)
+  Triggered patterns: DC
+    • DC: I≥Q3 | Bu konu tek yönlü iletişim örüntüsü (yayın veya abonelik ağırlıklı) sergiliyor mu?
+
+▶ stream.data.chunk5 (Score: 0.125)
+  Triggered patterns: DC
+    • DC: I≥Q3 | Bu konu tek yönlü iletişim örüntüsü (yayın veya abonelik ağırlıklı) sergiliyor mu?
+
+▶ stream.data.chunk6 (Score: 0.125)
+  Triggered patterns: DC
+    • DC: I≥Q3 | Bu konu tek yönlü iletişim örüntüsü (yayın veya abonelik ağırlıklı) sergiliyor mu?
+
+▶ stream.data.chunk7 (Score: 0.125)
+  Triggered patterns: DC
+    • DC: I≥Q3 | Bu konu tek yönlü iletişim örüntüsü (yayın veya abonelik ağırlıklı) sergiliyor mu?
 
 ======================================================================
 TOP 2 HIGHEST SCORING NODES
 ======================================================================
 
-▶ N0 (Score: 1.180)
+▶ StreamServer (Score: 1.180)
   Triggered pattern: IH
-    • IH: Interaction Hub: High ND (many apps) + High NID (many internal interactions)
+    • IH: ND≥Q3 ∧ NID≥Q3 | Bu çalışma düğümünde yüksek uygulama yoğunluğu ve düğüm içi etkileşim yoğunluğu var mı?
+
+======================================================================
+TOP 1 HIGHEST SCORING LIBRARIES
+======================================================================
 
 ======================================================================
 SUMMARY STATISTICS
@@ -58,6 +122,7 @@ SUMMARY STATISTICS
   Total applications: 11, pattern triggered: 11 (100.0%)
   Total topics: 11, pattern triggered: 11 (100.0%)
   Total nodes: 2, pattern triggered: 1 (50.0%)
+  Total libraries: 1, pattern triggered: 0 (0.0%)
 
 
 ============================================================
@@ -66,36 +131,41 @@ RAW DATA
 
 APPLICATIONS
 ------------------------------------------------------------
- id    Score     OS_P     UNI    WR    RS    CS   SD
- A1 0.865284 0.690909 0.58125  True  True  True True
- A6 0.690909 0.690909 0.00000  True  True  True True
- A3 0.690909 0.690909 0.00000  True  True  True True
- A2 0.590909 0.590909 0.00000  True False  True True
- A0 0.280909 0.190909 0.30000 False  True False True
-A10 0.190909 0.190909 0.00000 False  True False True
- A4 0.190909 0.190909 0.00000 False  True False True
- A5 0.190909 0.190909 0.00000 False  True False True
- A7 0.190909 0.190909 0.00000 False  True False True
- A8 0.190909 0.190909 0.00000 False  True False True
- A9 0.190909 0.190909 0.00000 False  True False True
+             name    Score     OS_P     UNI    WR    RS    CS    SD
+CommandController 1.197708 0.933333 0.88125  True  True  True  True
+    HealthMonitor 0.923333 0.833333 0.30000  True False  True  True
+   StreamProducer 0.613333 0.433333 0.60000 False  True False  True
+ RemoteController 0.600000 0.600000 0.00000  True  True  True False
+   StatusReporter 0.600000 0.600000 0.00000  True  True  True False
+    HealthDisplay 0.100000 0.100000 0.00000 False  True False False
+     StartHandler 0.100000 0.100000 0.00000 False  True False False
+      StopHandler 0.100000 0.100000 0.00000 False  True False False
+    StatusDisplay 0.100000 0.100000 0.00000 False  True False False
+    StartListener 0.100000 0.100000 0.00000 False  True False False
+     StopListener 0.100000 0.100000 0.00000 False  True False False
 
 TOPICS
 ------------------------------------------------------------
- id    Score     OS_P  UNI    CB    DC
-T10 0.513333 0.333333  0.6  True False
- T9 0.513333 0.333333  0.6  True False
- T8 0.513333 0.333333  0.6  True False
- T1 0.125000 0.125000  0.0 False  True
- T0 0.125000 0.125000  0.0 False  True
- T2 0.125000 0.125000  0.0 False  True
- T3 0.125000 0.125000  0.0 False  True
- T5 0.125000 0.125000  0.0 False  True
- T4 0.125000 0.125000  0.0 False  True
- T7 0.125000 0.125000  0.0 False  True
- T6 0.125000 0.125000  0.0 False  True
+                 name    Score     OS_P  UNI    CB    DC    PA
+monitor.health.status 0.936667 0.666667  0.9  True False  True
+    control.cmd.start 0.936667 0.666667  0.9  True False  True
+     control.cmd.stop 0.936667 0.666667  0.9  True False  True
+   stream.data.chunk1 0.125000 0.125000  0.0 False  True False
+   stream.data.chunk2 0.125000 0.125000  0.0 False  True False
+   stream.data.chunk3 0.125000 0.125000  0.0 False  True False
+   stream.data.chunk4 0.125000 0.125000  0.0 False  True False
+   stream.data.chunk5 0.125000 0.125000  0.0 False  True False
+   stream.data.chunk6 0.125000 0.125000  0.0 False  True False
+   stream.data.chunk7 0.125000 0.125000  0.0 False  True False
+   stream.data.chunk8 0.125000 0.125000  0.0 False  True False
 
 NODES
 ------------------------------------------------------------
-id  Score  OS_P  UNI    IH
-N0   1.18   1.0  0.6  True
-N1   0.00   0.0  0.0 False
+          name  Score  OS_P  UNI    IH
+  StreamServer   1.18   1.0  0.6  True
+ProcessingNode   0.00   0.0  0.0 False
+
+LIBRARIES
+------------------------------------------------------------
+     name  Score  OS_P  UNI   WUL    CL
+libstream    0.0   0.0  0.0 False False
