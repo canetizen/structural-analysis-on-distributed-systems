@@ -3,413 +3,464 @@
 """
 Expert Evaluation Comparison Tool
 
-Compares system results with expert opinions and
-computes Precision@K, Recall@K, F1@K, Jaccard, and Spearman correlation metrics.
+Compares system structural analysis results with expert evaluations.
+Implements majority voting across multiple experts (≥3 out of 5).
+Computes Precision@K, Recall@K, F1@K for K=5, 10.
 
-Both expert opinions and system results use component NAMEs.
+Expert evaluations are in simple TXT format:
+- One file per expert (expert_1.txt, expert_2.txt, etc.)
+- E = anomaly, H = not anomaly
+
+Output format matches paper Table format:
+- Component Type | K | Precision | Recall | F1-Score
 """
 
-import json
 import argparse
 from pathlib import Path
 
-try:
-    from scipy.stats import spearmanr
-    SCIPY_AVAILABLE = True
-except ImportError:
-    SCIPY_AVAILABLE = False
-
-
-def load_json(path):
-    """Load JSON file"""
-    with open(path) as f:
-        return json.load(f)
-
 
 def parse_results_txt(path):
-    """Parse result TXT file (name-based)"""
-    with open(path) as f:
+    """Parse result TXT file and extract component rankings"""
+    with open(path, encoding="utf-8") as f:
         content = f.read()
     
-    results = {"apps": [], "topics": [], "nodes": [], "libs": []}
+    results = {"applications": [], "topics": [], "nodes": [], "libraries": []}
     
-    # Support both Turkish (HAM) and English (RAW) headers
+    # Find RAW DATA section
     if "RAW DATA" in content:
-        ham = content.split("RAW DATA")[1]
-    elif "HAM" in content:
-        ham = content.split("HAM")[1]
+        raw = content.split("RAW DATA")[1]
     else:
-        ham = content
+        raw = content
     
-    # Applications
-    if "APPLICATIONS" in ham:
-        section = ham.split("APPLICATIONS")[1].split("TOPICS")[0]
-        for line in section.strip().split("\n")[2:]:
+    def parse_section(section_text):
+        """Parse a section and extract name-score pairs"""
+        items = []
+        for line in section_text.strip().split("\n")[2:]:  # Skip header lines
             parts = line.split()
             if len(parts) >= 2:
-                # Name might contain spaces, Score is always second-to-last numeric
-                # Format: name Score OS_P UNI WR RS CS SD
-                # Find where numeric values start (Score column)
+                # Find first numeric value (Score column)
                 for i, part in enumerate(parts):
                     try:
                         score = float(part)
                         name = " ".join(parts[:i])
-                        results["apps"].append({
-                            "name": name,
-                            "score": score
-                        })
+                        if name:
+                            items.append({"name": name, "score": score})
                         break
                     except ValueError:
                         continue
+        return items
     
-    # Topics
-    if "TOPICS" in ham:
-        if "NODES" in ham.split("TOPICS")[1]:
-            section = ham.split("TOPICS")[1].split("NODES")[0]
+    # Parse each section
+    if "APPLICATIONS" in raw:
+        section = raw.split("APPLICATIONS")[1].split("TOPICS")[0]
+        results["applications"] = parse_section(section)
+    
+    if "TOPICS" in raw:
+        if "NODES" in raw.split("TOPICS")[1]:
+            section = raw.split("TOPICS")[1].split("NODES")[0]
         else:
-            section = ham.split("TOPICS")[1]
-        for line in section.strip().split("\n")[2:]:
-            parts = line.split()
-            if len(parts) >= 2:
-                for i, part in enumerate(parts):
-                    try:
-                        score = float(part)
-                        name = " ".join(parts[:i])
-                        results["topics"].append({
-                            "name": name,
-                            "score": score
-                        })
-                        break
-                    except ValueError:
-                        continue
+            section = raw.split("TOPICS")[1]
+        results["topics"] = parse_section(section)
     
-    # Nodes
-    if "NODES" in ham:
-        if "LIBRARIES" in ham.split("NODES")[1]:
-            section = ham.split("NODES")[1].split("LIBRARIES")[0]
+    if "NODES" in raw:
+        if "LIBRARIES" in raw.split("NODES")[1]:
+            section = raw.split("NODES")[1].split("LIBRARIES")[0]
         else:
-            section = ham.split("NODES")[1]
-        for line in section.strip().split("\n")[2:]:
-            parts = line.split()
-            if len(parts) >= 2:
-                for i, part in enumerate(parts):
-                    try:
-                        score = float(part)
-                        name = " ".join(parts[:i])
-                        results["nodes"].append({
-                            "name": name,
-                            "score": score
-                        })
-                        break
-                    except ValueError:
-                        continue
+            section = raw.split("NODES")[1]
+        results["nodes"] = parse_section(section)
     
-    # Libraries
-    if "LIBRARIES" in ham:
-        section = ham.split("LIBRARIES")[1]
-        for line in section.strip().split("\n")[2:]:
-            parts = line.split()
-            if len(parts) >= 2:
-                for i, part in enumerate(parts):
-                    try:
-                        score = float(part)
-                        name = " ".join(parts[:i])
-                        results["libs"].append({
-                            "name": name,
-                            "score": score
-                        })
-                        break
-                    except ValueError:
-                        continue
+    if "LIBRARIES" in raw:
+        section = raw.split("LIBRARIES")[1]
+        results["libraries"] = parse_section(section)
     
     return results
 
 
-def get_top_k(results, category, k):
-    """Return top-k names sorted by score"""
+def parse_expert_txt(path):
+    """Parse expert evaluation TXT file.
+    
+    Format:
+    [UYGULAMALAR]
+    ComponentName: E
+    ComponentName2: H
+    
+    [KONULAR]
+    TopicName: E
+    ...
+    """
+    with open(path, encoding="utf-8") as f:
+        content = f.read()
+    
+    evaluations = {
+        "applications": [],
+        "topics": [],
+        "nodes": [],
+        "libraries": []
+    }
+    
+    section_map = {
+        "[UYGULAMALAR]": "applications",
+        "[KONULAR]": "topics",
+        "[ÇALIŞMA DÜĞÜMLERİ]": "nodes",
+        "[KÜTÜPHANELER]": "libraries"
+    }
+    
+    current_section = None
+    
+    for line in content.split("\n"):
+        line = line.strip()
+        
+        # Skip empty lines and comments
+        if not line or line.startswith("#"):
+            continue
+        
+        # Check for section header
+        if line in section_map:
+            current_section = section_map[line]
+            continue
+        
+        # Parse component evaluation
+        if current_section and ":" in line:
+            parts = line.split(":", 1)
+            name = parts[0].strip()
+            value = parts[1].strip().upper() if len(parts) > 1 else ""
+            
+            if name and value in ["E", "H"]:
+                is_anomaly = value == "E"
+                evaluations[current_section].append({
+                    "name": name,
+                    "is_anomaly": is_anomaly
+                })
+    
+    return evaluations
+
+
+def get_top_k_names(results, category, k):
+    """Return top-k component names sorted by score descending"""
     sorted_items = sorted(results[category], key=lambda x: x["score"], reverse=True)
     return [item["name"] for item in sorted_items[:k]]
 
 
-def get_all_ranked(results, category):
-    """Return all items sorted by score with their ranks"""
-    sorted_items = sorted(results[category], key=lambda x: x["score"], reverse=True)
-    return {item["name"]: rank + 1 for rank, item in enumerate(sorted_items)}
-
-
-def compute_spearman(system_ranks, expert_names):
+def apply_majority_voting(expert_evaluations_list, category, min_votes=3):
     """
-    Compute Spearman rank correlation between system and expert rankings.
+    Apply majority voting to determine ground truth.
     
-    Expert list is treated as a ranked list (first item = rank 1, etc.)
-    Only items appearing in both lists are considered.
+    A component is considered "anomalous" if at least min_votes experts
+    marked it as anomalous (is_anomaly=True).
+    
+    Returns: List of component names that are anomalous according to majority
     """
-    if not SCIPY_AVAILABLE:
-        return {"spearman": None, "p_value": None, "note": "scipy not installed"}
+    if not expert_evaluations_list:
+        return []
     
-    if not expert_names or len(expert_names) < 2:
-        return {"spearman": None, "p_value": None, "note": "Need at least 2 expert items"}
+    # Count votes for each component
+    vote_counts = {}
     
-    # Expert ranking: position in expert list (1-indexed)
-    expert_ranks = {name: rank + 1 for rank, name in enumerate(expert_names)}
+    for expert_eval in expert_evaluations_list:
+        if category not in expert_eval:
+            continue
+        
+        for component in expert_eval[category]:
+            name = component["name"]
+            is_anomaly = component.get("is_anomaly", False)
+            
+            if name not in vote_counts:
+                vote_counts[name] = 0
+            if is_anomaly:
+                vote_counts[name] += 1
     
-    # Find common items
-    common_items = set(system_ranks.keys()) & set(expert_ranks.keys())
-    
-    if len(common_items) < 2:
-        return {"spearman": None, "p_value": None, "note": f"Only {len(common_items)} common items"}
-    
-    # Build rank vectors for common items
-    system_vector = [system_ranks[item] for item in common_items]
-    expert_vector = [expert_ranks[item] for item in common_items]
-    
-    # Compute Spearman correlation
-    correlation, p_value = spearmanr(system_vector, expert_vector)
-    
-    return {
-        "spearman": correlation,
-        "p_value": p_value,
-        "n_common": len(common_items)
-    }
+    # Return components with majority votes
+    anomalous = [name for name, votes in vote_counts.items() if votes >= min_votes]
+    return anomalous
 
 
-def compute_metrics(system_names, expert_names):
-    """Compute Precision, Recall, F1, Jaccard (name-based)"""
-    if not expert_names:
-        return {"precision": None, "recall": None, "f1": None, "jaccard": None, "note": "Expert list empty"}
+def compute_precision_recall_f1(system_top_k, expert_anomalous):
+    """Compute Precision@K, Recall@K, F1@K"""
+    if not system_top_k:
+        return {"precision": 0.0, "recall": 0.0, "f1": 0.0}
     
-    system_set = set(system_names)
-    expert_set = set(expert_names)
+    system_set = set(system_top_k)
+    expert_set = set(expert_anomalous)
     
-    intersection = system_set & expert_set
-    union = system_set | expert_set
+    true_positives = len(system_set & expert_set)
     
-    k = len(system_names)
-    n_expert = len(expert_names)
-    n_intersection = len(intersection)
-    
-    precision = n_intersection / k if k > 0 else 0
-    recall = n_intersection / n_expert if n_expert > 0 else 0
-    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
-    jaccard = n_intersection / len(union) if len(union) > 0 else 0
+    precision = true_positives / len(system_set) if system_set else 0.0
+    recall = true_positives / len(expert_set) if expert_set else 0.0
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
     
     return {
         "precision": precision,
         "recall": recall,
         "f1": f1,
-        "jaccard": jaccard,
-        "intersection": sorted(intersection),
-        "system_only": sorted(system_set - expert_set),
-        "expert_only": sorted(expert_set - system_set)
+        "true_positives": true_positives,
+        "system_count": len(system_set),
+        "expert_count": len(expert_set)
     }
 
 
-def evaluate_scenario(scenario_name, results_path, expert_data, k):
-    """Evaluate all categories for a scenario"""
-    results = parse_results_txt(results_path)
+def evaluate_all_k_values(results, expert_anomalous, category, k_values=[5, 10]):
+    """Evaluate for multiple K values"""
+    evaluations = []
     
-    evaluation = {
-        "scenario": scenario_name,
-        "k": k,
-        "categories": {}
-    }
+    for k in k_values:
+        system_top_k = get_top_k_names(results, category, k)
+        metrics = compute_precision_recall_f1(system_top_k, expert_anomalous)
+        metrics["k"] = k
+        evaluations.append(metrics)
     
-    category_map = {
-        "applications": "apps",
-        "topics": "topics", 
-        "nodes": "nodes",
-        "libraries": "libs"
-    }
-    
-    for expert_key, results_key in category_map.items():
-        # Expert names directly from expert_opinions.json
-        expert_names = expert_data.get(expert_key, [])
-        
-        # Get system top-k names
-        system_names = get_top_k(results, results_key, k)
-        
-        # Get all system ranks for Spearman
-        system_ranks = get_all_ranked(results, results_key)
-        
-        # Compute metrics (name-based)
-        metrics = compute_metrics(system_names, expert_names)
-        
-        # Compute Spearman correlation
-        spearman_result = compute_spearman(system_ranks, expert_names)
-        metrics.update(spearman_result)
-        
-        # Add display info
-        metrics["system_names"] = system_names
-        metrics["expert_names"] = expert_names
-        
-        evaluation["categories"][expert_key] = metrics
-    
-    return evaluation
+    return evaluations
 
 
-def print_evaluation(evaluation):
-    """Print evaluation results"""
-    print(f"\n{'='*75}")
-    print(f"SCENARIO: {evaluation['scenario']} (K={evaluation['k']})")
-    print(f"{'='*75}")
+def print_table(all_results, num_experts, min_votes, output_file=None):
+    """Print results in paper table format"""
+    lines = []
     
-    for cat_name, metrics in evaluation["categories"].items():
-        print(f"\n  [{cat_name.upper()}]")
-        print(f"  System Top-{evaluation['k']}:")
-        for i, name in enumerate(metrics['system_names']):
-            print(f"    {i+1}. {name}")
+    lines.append("=" * 70)
+    lines.append("UZMAN DEĞERLENDİRME SONUÇLARI")
+    lines.append("=" * 70)
+    lines.append(f"Uzman sayısı: {num_experts}")
+    lines.append(f"Çoğunluk eşiği: ≥{min_votes} oy")
+    lines.append("")
+    lines.append(f"{'Bileşen Türü':<20} {'K':<5} {'Kesinlik':<12} {'Duyarlık':<12} {'F1-Skoru':<12}")
+    lines.append("-" * 70)
+    
+    category_names = {
+        "applications": "Uygulama",
+        "topics": "Konu",
+        "nodes": "Çalışma Düğümü",
+        "libraries": "Kütüphane"
+    }
+    
+    for category, evaluations in all_results.items():
+        if not evaluations:
+            continue
+        display_name = category_names.get(category, category)
+        for i, metrics in enumerate(evaluations):
+            if i == 0:
+                cat_display = display_name
+            else:
+                cat_display = ""
+            
+            lines.append(f"{cat_display:<20} {metrics['k']:<5} {metrics['precision']:<12.2f} {metrics['recall']:<12.2f} {metrics['f1']:<12.2f}")
+    
+    lines.append("-" * 70)
+    lines.append("")
+    
+    # LaTeX table output
+    lines.append("=" * 70)
+    lines.append("LaTeX TABLO FORMATI")
+    lines.append("=" * 70)
+    lines.append("")
+    
+    for category, evaluations in all_results.items():
+        if not evaluations:
+            continue
+        display_name = category_names.get(category, category)
+        for i, metrics in enumerate(evaluations):
+            if i == 0:
+                cat_display = f"\\multirow{{3}}{{*}}{{{display_name}}}"
+            else:
+                cat_display = ""
+            
+            lines.append(f"{cat_display} & {metrics['k']} & {metrics['precision']:.2f} & {metrics['recall']:.2f} & {metrics['f1']:.2f} \\\\")
+        lines.append("\\hline")
+    
+    lines.append("")
+    
+    # Print to console
+    for line in lines:
+        print(line)
+    
+    # Write to file if specified
+    if output_file:
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines))
+        print(f"\nResults saved to: {output_file}")
+
+
+def print_detailed_results(results, expert_evaluations_list, expert_anomalous_by_category, min_votes):
+    """Print detailed comparison for debugging"""
+    print("\n" + "=" * 70)
+    print("DETAYLI KARŞILAŞTIRMA")
+    print("=" * 70)
+    
+    categories = ["applications", "topics", "nodes", "libraries"]
+    category_names = {
+        "applications": "UYGULAMALAR",
+        "topics": "KONULAR",
+        "nodes": "ÇALIŞMA DÜĞÜMLERİ",
+        "libraries": "KÜTÜPHANELER"
+    }
+    
+    for category in categories:
+        if not results[category]:
+            continue
+            
+        print(f"\n[{category_names.get(category, category.upper())}]")
         
-        print(f"  Expert List:")
-        for name in metrics['expert_names']:
+        # System ranking
+        system_items = sorted(results[category], key=lambda x: x["score"], reverse=True)
+        print("  Sistem Sıralaması (Score):")
+        for i, item in enumerate(system_items[:10], 1):
+            marker = "✓" if item["name"] in expert_anomalous_by_category.get(category, []) else " "
+            print(f"    {marker} {i}. {item['name']} (Score: {item['score']:.3f})")
+        
+        # Expert ground truth
+        expert_anomalous = expert_anomalous_by_category.get(category, [])
+        print(f"\n  Uzman Değerlendirmesi (≥{min_votes} oy ile aykırı):")
+        for name in expert_anomalous:
             print(f"    • {name}")
         
-        if metrics.get("precision") is not None:
-            print(f"  ─────────────────────────────────────────────────")
-            print(f"  Intersection: {metrics['intersection']}")
-            print(f"  Precision:    {metrics['precision']:.2%} ({len(metrics['intersection'])}/{evaluation['k']})")
-            print(f"  Recall:       {metrics['recall']:.2%} ({len(metrics['intersection'])}/{len(metrics['expert_names'])})")
-            print(f"  F1:           {metrics['f1']:.2%}")
-            print(f"  Jaccard:      {metrics['jaccard']:.2%}")
-            
-            # Spearman correlation
-            if metrics.get("spearman") is not None:
-                print(f"  Spearman ρ:   {metrics['spearman']:.3f} (p={metrics['p_value']:.4f}, n={metrics['n_common']})")
-            elif metrics.get("note"):
-                print(f"  Spearman ρ:   N/A ({metrics['note']})")
-            
-            if metrics["system_only"]:
-                print(f"  System+:      {metrics['system_only']}")
-                print(f"                (not in expert list)")
-            if metrics["expert_only"]:
-                print(f"  Expert+:      {metrics['expert_only']}")
-                print(f"                (not in system top-k)")
-        else:
-            print(f"  {metrics.get('note', 'Evaluation failed')}")
-
-
-def print_summary(all_evaluations):
-    """Print overall summary table"""
-    print(f"\n{'='*90}")
-    print("OVERALL SUMMARY")
-    print(f"{'='*90}")
-    
-    print(f"\n{'Scenario':<32} {'Category':<15} {'P@K':<8} {'R@K':<8} {'F1':<8} {'Jaccard':<8} {'Spearman':<10}")
-    print("-" * 90)
-    
-    total_p, total_r, total_f1, total_j, total_s = 0, 0, 0, 0, 0
-    count = 0
-    spearman_count = 0
-    
-    for eval_result in all_evaluations:
-        scenario = eval_result["scenario"][:30]
-        for cat_name, metrics in eval_result["categories"].items():
-            if metrics.get("precision") is not None:
-                p = metrics["precision"]
-                r = metrics["recall"]
-                f1 = metrics["f1"]
-                j = metrics["jaccard"]
-                s = metrics.get("spearman")
-                
-                s_str = f"{s:.3f}" if s is not None else "N/A"
-                print(f"{scenario:<32} {cat_name:<15} {p:<8.2%} {r:<8.2%} {f1:<8.2%} {j:<8.2%} {s_str:<10}")
-                
-                total_p += p
-                total_r += r
-                total_f1 += f1
-                total_j += j
-                if s is not None:
-                    total_s += s
-                    spearman_count += 1
-                count += 1
-                scenario = ""  # Don't show scenario name in subsequent rows
-    
-    if count > 0:
-        print("-" * 90)
-        avg_s_str = f"{total_s/spearman_count:.3f}" if spearman_count > 0 else "N/A"
-        print(f"{'AVERAGE':<32} {'':<15} {total_p/count:<8.2%} {total_r/count:<8.2%} {total_f1/count:<8.2%} {total_j/count:<8.2%} {avg_s_str:<10}")
-        
-        print(f"\n{'='*90}")
-        print("CONCLUSION")
-        print(f"{'='*90}")
-        avg_f1 = total_f1 / count
-        if avg_f1 >= 0.7:
-            print(f"  ✅ Average F1={avg_f1:.2%} - System has HIGH agreement with expert evaluation")
-        elif avg_f1 >= 0.5:
-            print(f"  ⚠️  Average F1={avg_f1:.2%} - System has MODERATE agreement with expert evaluation")
-        else:
-            print(f"  ❌ Average F1={avg_f1:.2%} - System has LOW agreement with expert evaluation")
-        
-        if spearman_count > 0:
-            avg_s = total_s / spearman_count
-            if avg_s >= 0.7:
-                print(f"  ✅ Average Spearman ρ={avg_s:.3f} - Strong rank correlation with expert")
-            elif avg_s >= 0.4:
-                print(f"  ⚠️  Average Spearman ρ={avg_s:.3f} - Moderate rank correlation with expert")
-            elif avg_s >= 0:
-                print(f"  ❌ Average Spearman ρ={avg_s:.3f} - Weak rank correlation with expert")
-            else:
-                print(f"  ❌ Average Spearman ρ={avg_s:.3f} - Negative rank correlation with expert")
+        if not expert_anomalous:
+            print("    (çoğunluk oyuna ulaşan bileşen yok)")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Compare system results with expert evaluations",
+        description="Compare system results with expert evaluations using majority voting",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Example usage:
-  python compare_expert.py results/ -k 5
-  python compare_expert.py results/ --expert datasets/expert_opinions.json -k 3
+  python compare_expert.py results/hub_application_results.txt -e experts/
+  python compare_expert.py results/ -e experts/ --all
+  
+Expert evaluation files should be named: expert_1.txt, expert_2.txt, etc.
         """
     )
-    parser.add_argument("results_dir", help="Directory containing result files")
-    parser.add_argument("--expert", "-e", default="datasets/expert_opinions.json",
-                        help="Expert opinions JSON file")
-    parser.add_argument("-k", "--top", type=int, default=5,
-                        help="Number of top-k to compare")
+    parser.add_argument("results_path", help="Results file or directory (with --all)")
+    parser.add_argument("--expert-dir", "-e", default="experts/",
+                        help="Base directory containing per-dataset expert folders")
+    parser.add_argument("--min-votes", "-m", type=int, default=3,
+                        help="Minimum votes for majority (default: 3 out of 5)")
+    parser.add_argument("--output", "-o", help="Output file for results")
+    parser.add_argument("--detailed", "-d", action="store_true",
+                        help="Show detailed comparison")
+    parser.add_argument("--all", "-a", action="store_true",
+                        help="Process all result files in directory")
     
     args = parser.parse_args()
     
-    results_dir = Path(args.results_dir)
-    expert_opinions = load_json(args.expert)
-    k = args.top
+    results_path = Path(args.results_path)
+    expert_base_dir = Path(args.expert_dir)
     
-    print(f"Expert file: {args.expert}")
-    print(f"Results directory: {results_dir}")
-    print(f"Top-K: {k}")
+    if not expert_base_dir.exists():
+        print(f"Error: Expert base directory not found: {expert_base_dir}")
+        return
     
-    all_evaluations = []
+    # Determine files to process
+    if args.all and results_path.is_dir():
+        result_files = sorted(results_path.glob("*_results.txt"))
+    elif results_path.is_file():
+        result_files = [results_path]
+    else:
+        print(f"Error: Invalid path: {results_path}")
+        return
     
-    # Evaluate each scenario
-    scenario_files = {
-        "hub_application": ("hub_application.json", "hub_application_results.txt"),
-        "single_backbone_topic": ("single_backbone_topic.json", "single_backbone_topic_results.txt"),
-        "single_metric_outlier": ("single_metric_outlier.json", "single_metric_outlier_results.txt"),
-        "context_diversity_comparison": ("context_diversity_comparison.json", "context_diversity_comparison_results.txt")
-    }
-    
-    for scenario_name, (dataset_file, results_file) in scenario_files.items():
-        results_path = results_dir / results_file
+    if not result_files:
+        print("Error: No result files found.")
+        return
+
+    # Aggregate results across all datasets for combined table
+    combined_results = {"applications": [], "topics": [], "nodes": [], "libraries": []}
+    datasets_processed = 0
+
+    for result_file in result_files:
+        # Derive dataset name: hub_application_results.txt → hub_application
+        dataset_name = result_file.stem.replace("_results", "")
+        expert_dir = expert_base_dir / dataset_name
         
-        if not results_path.exists():
-            print(f"⚠ {results_file} not found, skipping...")
+        if not expert_dir.exists():
+            print(f"Warning: Expert folder not found for {dataset_name}: {expert_dir}")
             continue
         
-        if scenario_name not in expert_opinions:
-            print(f"⚠ No expert opinion for {scenario_name}, skipping...")
+        expert_files = sorted(expert_dir.glob("expert_*.txt"))
+        if not expert_files:
+            print(f"Warning: No expert files in {expert_dir}")
             continue
         
-        evaluation = evaluate_scenario(
-            scenario_name, 
-            results_path, 
-            expert_opinions[scenario_name],
-            k
-        )
-        all_evaluations.append(evaluation)
-        print_evaluation(evaluation)
+        print(f"\n{'='*70}")
+        print(f"Dataset: {dataset_name}")
+        print(f"Result file: {result_file.name}")
+        print(f"Expert files: {len(expert_files)}")
+        for ef in expert_files:
+            print(f"  • {ef.name}")
+        print(f"Minimum votes for majority: {args.min_votes}")
+        print(f"{'='*70}")
+        
+        # Parse expert evaluations for this dataset
+        expert_evaluations_list = []
+        for ef in expert_files:
+            try:
+                eval_data = parse_expert_txt(ef)
+                expert_evaluations_list.append(eval_data)
+            except Exception as e:
+                print(f"Warning: Error parsing {ef.name}: {e}")
+        
+        if len(expert_evaluations_list) < args.min_votes:
+            print(f"Warning: Only {len(expert_evaluations_list)} experts, but minimum votes is {args.min_votes}")
+        
+        # Parse results
+        results = parse_results_txt(result_file)
+        
+        # Apply majority voting for each category
+        categories = ["applications", "topics", "nodes", "libraries"]
+        expert_anomalous_by_category = {}
+        dataset_results = {}
+        
+        for category in categories:
+            expert_anomalous = apply_majority_voting(expert_evaluations_list, category, args.min_votes)
+            expert_anomalous_by_category[category] = expert_anomalous
+            
+            if results[category]:
+                evaluations = evaluate_all_k_values(results, expert_anomalous, category)
+                dataset_results[category] = evaluations
+                combined_results[category].append(evaluations)
+        
+        # Print per-dataset results
+        print_table(dataset_results, len(expert_evaluations_list), args.min_votes)
+        
+        if args.detailed:
+            print_detailed_results(results, expert_evaluations_list, expert_anomalous_by_category, args.min_votes)
+        
+        datasets_processed += 1
     
-    # Overall summary
-    if all_evaluations:
-        print_summary(all_evaluations)
+    # Print combined (averaged) results if multiple datasets
+    if datasets_processed > 1:
+        print(f"\n\n{'#'*70}")
+        print(f"BİRLEŞİK SONUÇLAR (Tüm dataset'ler üzerinden ortalama)")
+        print(f"{'#'*70}")
+        
+        averaged_results = {}
+        for category in ["applications", "topics", "nodes", "libraries"]:
+            if not combined_results[category]:
+                continue
+            
+            # Average across datasets for each K
+            k_values = [5, 10]
+            avg_evaluations = []
+            for ki, k in enumerate(k_values):
+                precisions = []
+                recalls = []
+                f1s = []
+                for dataset_evals in combined_results[category]:
+                    if ki < len(dataset_evals):
+                        precisions.append(dataset_evals[ki]["precision"])
+                        recalls.append(dataset_evals[ki]["recall"])
+                        f1s.append(dataset_evals[ki]["f1"])
+                
+                if precisions:
+                    avg_evaluations.append({
+                        "k": k,
+                        "precision": sum(precisions) / len(precisions),
+                        "recall": sum(recalls) / len(recalls),
+                        "f1": sum(f1s) / len(f1s)
+                    })
+            
+            if avg_evaluations:
+                averaged_results[category] = avg_evaluations
+        
+        output_file = args.output if args.output else None
+        print_table(averaged_results, datasets_processed, args.min_votes, output_file)
 
 
 if __name__ == "__main__":

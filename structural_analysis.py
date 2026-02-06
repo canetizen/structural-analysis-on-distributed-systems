@@ -451,106 +451,20 @@ def analyze_dataset(path):
 
 
 # =============================
-# PATTERN DEFINITIONS & EXPERT QUESTIONS
+# PATTERN EXPLANATIONS (condition | question)
 # =============================
 
-# Pattern definitions with metric conditions (for display)
-PATTERN_CONDITIONS = {
-    "WR": "R≥Q3 ∧ A≥Q3",
-    "RS": "RA≥Q3 ∨ RA≤Q1", 
-    "CS": "TC≥Q3",
-    "SD": "LE≥Q3",
-    "CB": "C≥Q3 ∧ I≤Q1",
-    "DC": "I≥Q3",
-    "PA": "LCR≥Q3",
-    "IH": "ND≥Q3 ∧ NID≥Q3",
-    "WUL": "LC≥Q3",
-    "CL": "LCon≥Q3",
-}
-
-# Metric full names (Turkish - matching paper terminology)
-METRIC_NAMES = {
-    "R": "Etki Alanı (Reach)",
-    "A": "Yoğunlaştırma (Amplification)",
-    "RA": "Rol Asimetrisi (Role Asymmetry)",
-    "TC": "Bağlam Çeşitliliği (Topic Context Diversity)",
-    "LE": "Kütüphane Maruziyeti (Library Exposure)",
-    "C": "Kapsayıcılık (Coverage)",
-    "I": "Dengesizlik (Imbalance)",
-    "PS": "Fiziksel Yayılım (Physical Spread)",
-    "LCR": "Düşük Bağlantılı Uygulama Oranı (Low Connectivity Ratio)",
-    "ND": "Düğüm Yoğunluğu (Node Density)",
-    "NID": "Düğüm İçi Etkileşim Yoğunluğu (Node Interaction Density)",
-    "LC": "Kütüphane Yaygınlığı (Library Coverage)",
-    "LCon": "Kütüphane Yoğunlaşması (Library Concentration)",
-}
-
-# Pattern full names (Turkish - matching paper terminology)
-PATTERN_NAMES = {
-    "WR": "Geniş Etki Alanı (Wide Reach)",
-    "RS": "Rol Dengesizliği (Role Skew)",
-    "CS": "Bağlam Yayılımı (Context Spread)",
-    "SD": "Ortak Bağımlılık Maruziyeti (Shared Dependency)",
-    "CB": "İletişim Omurgası (Communication Backbone)",
-    "DC": "Yönlü Yoğunlaşma (Directional Concentration)",
-    "PA": "Çevresel Toplayıcı (Peripheral Aggregator)",
-    "IH": "Yoğunlaşmış Etkileşim Kümesi (Interaction Hotspot)",
-    "WUL": "Yaygın Ortak Kütüphane (Widely Used Library)",
-    "CL": "Yoğunlaşmış Ortak Kütüphane (Concentrated Library)",
-}
-
-# Pattern descriptions - what each pattern means (Turkish)
-PATTERN_DESCRIPTIONS = {
-    "WR": "Bu uygulama, az sayıda yayın kanalı kullanarak çok sayıda uygulamaya dolaylı olarak erişebiliyor. Etki Alanı (R) ve Yoğunlaştırma (A) metrikleri görece yüksek.",
-    "RS": "Bu uygulama, yayıncı veya abone rollerinden birinde belirgin şekilde yoğunlaşıyor. Rol Asimetrisi (RA) metriği görece uç değerde.",
-    "CS": "Bu uygulama, birçok farklı işlevsel bağlamda (konu kategorisinde) etkileşimde bulunuyor. Bağlam Çeşitliliği (TC) metriği görece yüksek.",
-    "SD": "Bu uygulama, görece yüksek sayıda ortak kütüphaneye bağımlı. Kütüphane Maruziyeti (LE) metriği görece yüksek.",
-    "CB": "Bu konu, çok sayıda uygulamayı dengeli biçimde (hem yayıncı hem abone) birbirine bağlıyor. Kapsayıcılık (C) yüksek, Dengesizlik (I) düşük.",
-    "DC": "Bu konu, tek yönlü iletişim örüntüsü sergiliyor (ağırlıklı yayın veya abonelik). Dengesizlik (I) metriği görece yüksek.",
-    "PA": "Bu konu, sistem genelinde düşük bağlantılı uygulamaları bir araya topluyor. Düşük Bağlantılı Uygulama Oranı (LCR) görece yüksek.",
-    "IH": "Bu çalışma düğümünde hem çok sayıda uygulama konumlanmış hem de uygulamalar arası etkileşim yoğun. Düğüm Yoğunluğu (ND) ve Düğüm İçi Etkileşim (NID) görece yüksek.",
-    "WUL": "Bu kütüphane, sistem genelinde çok sayıda uygulama tarafından kullanılıyor. Kütüphane Yaygınlığı (LC) görece yüksek.",
-    "CL": "Bu kütüphanenin kullanımı belirli çalışma düğümlerinde yoğunlaşmış. Kütüphane Yoğunlaşması (LCon) görece yüksek.",
-}
-
-# Expert survey questions per pattern (Turkish) - Three-phase questions
-# Phase 1: Detection accuracy - pattern-specific (Tespit doğru mu?)
-# Phase 2: If correct, awareness (Farkında mıydınız?)
-# Phase 3: Component-level - any other anomaly? (Başka aykırılık var mı?)
-
-# Soru 1: Pattern'e özgü tespit doğrulama soruları
-PATTERN_QUESTIONS_PHASE1 = {
-    "WR": "Bu uygulama sınırlı sayıda yayın kanalıyla geniş bir uygulama kümesine ulaşıyor mu?",
-    "RS": "Bu uygulama ağırlıklı olarak yayıncı veya abone rolünde yoğunlaşıyor mu?",
-    "CS": "Bu uygulama birçok farklı işlevsel bağlamda (konu kategorisinde) yer alıyor mu?",
-    "SD": "Bu uygulama görece yüksek sayıda ortak kütüphaneye bağımlı mı?",
-    "CB": "Bu konu çok sayıda uygulamayı dengeli biçimde birbirine bağlıyor mu?",
-    "DC": "Bu konu tek yönlü iletişim örüntüsü (yayın veya abonelik ağırlıklı) sergiliyor mu?",
-    "PA": "Bu konu ağırlıklı olarak düşük bağlantılı uygulamaları bir araya topluyor mu?",
-    "IH": "Bu çalışma düğümünde yüksek uygulama yoğunluğu ve düğüm içi etkileşim yoğunluğu var mı?",
-    "WUL": "Bu kütüphane çok sayıda uygulama tarafından kullanılıyor mu?",
-    "CL": "Bu kütüphanenin kullanımı belirli çalışma düğümlerinde yoğunlaşıyor mu?",
-}
-SURVEY_OPTIONS_1 = "(a) Evet | (b) Hayır"
-
-# Soru 2: Farkındalık sorusu (Soru 1 = Evet ise)
-SURVEY_QUESTION_2 = "Bu durum için farkında mıydınız?"
-SURVEY_OPTIONS_2 = "(a) Evet, tasarımsal bir tercih | (b) Hayır, fark edilmemişti"
-
-# Soru 3: Komponent bazında ek aykırılık sorusu
-SURVEY_QUESTION_3 = "Bu bileşen için tespit edilenler dışında başka bir yapısal aykırılık var mı?"
-SURVEY_OPTIONS_3 = "(a) Hayır | (b) Evet (açıklayınız)"
-
-# Legacy compatibility
-PATTERN_QUESTIONS_PHASE2 = {p: SURVEY_QUESTION_2 for p in PATTERN_QUESTIONS_PHASE1}
-
-# Legacy single question format (for backward compatibility)
-PATTERN_QUESTIONS = PATTERN_QUESTIONS_PHASE1
-
-# Legacy format for backward compatibility
 PATTERN_EXPLANATIONS = {
-    p: f"{PATTERN_CONDITIONS[p]} | {PATTERN_QUESTIONS[p]}" 
-    for p in PATTERN_CONDITIONS
+    "WR": "R≥Q3 ∧ A≥Q3 | Bu uygulama sınırlı sayıda yayın kanalıyla geniş bir uygulama kümesine ulaşıyor mu?",
+    "RS": "RA≥Q3 ∨ RA≤Q1 | Bu uygulama ağırlıklı olarak yayıncı veya abone rolünde yoğunlaşıyor mu?",
+    "CS": "TC≥Q3 | Bu uygulama birçok farklı işlevsel bağlamda (konu kategorisinde) yer alıyor mu?",
+    "SD": "LE≥Q3 | Bu uygulama görece yüksek sayıda ortak kütüphaneye bağımlı mı?",
+    "CB": "C≥Q3 ∧ I≤Q1 | Bu konu çok sayıda uygulamayı dengeli biçimde birbirine bağlıyor mu?",
+    "DC": "I≥Q3 | Bu konu tek yönlü iletişim örüntüsü (yayın veya abonelik ağırlıklı) sergiliyor mu?",
+    "PA": "LCR≥Q3 | Bu konu ağırlıklı olarak düşük bağlantılı uygulamaları bir araya topluyor mu?",
+    "IH": "ND≥Q3 ∧ NID≥Q3 | Bu çalışma düğümünde yüksek uygulama yoğunluğu ve düğüm içi etkileşim yoğunluğu var mı?",
+    "WUL": "LC≥Q3 | Bu kütüphane çok sayıda uygulama tarafından kullanılıyor mu?",
+    "CL": "LCon≥Q3 | Bu kütüphanenin kullanımı belirli çalışma düğümlerinde yoğunlaşıyor mu?",
 }
 
 
@@ -661,115 +575,6 @@ def generate_findings(apps_df, topics_df, nodes_df, libs_df, top_k):
     return "\n".join(findings)
 
 
-def generate_expert_survey_csv(apps_df, topics_df, nodes_df, libs_df, top_k=10):
-    """Generate CSV format expert survey with top-K components and their triggered patterns.
-    
-    Three-phase questions per component:
-    - Phase 1: Tespit doğru mu? (Pattern-specific)
-    - Phase 2: Farkında mıydınız? (If Phase 1 = Yes)
-    - Phase 3: Başka aykırılık var mı? (Component-level, once per component)
-    """
-    import csv
-    from io import StringIO
-    
-    output = StringIO()
-    writer = csv.writer(output, quoting=csv.QUOTE_ALL)
-    
-    # Header
-    writer.writerow([
-        "Bileşen Türü",
-        "Bileşen Adı", 
-        "Birleşik Skor",
-        "Örüntü Kodu",
-        "Örüntü Açıklaması",
-        "Soru 1: Tespit doğru mu?",
-        "Şıklar",
-        "Cevap 1",
-        "Soru 2: Farkında mıydınız? (Cevap 1=a ise)",
-        "Şıklar",
-        "Cevap 2",
-        "Soru 3: Başka aykırılık var mı?",
-        "Şıklar",
-        "Cevap 3",
-        "Açıklama/Yorum"
-    ])
-    
-    def write_component_rows(writer, comp_type, row, patterns, pattern_list):
-        """Write rows for a single component with all its patterns + final question."""
-        triggered = [p for p in pattern_list if row.get(p, False)]
-        
-        if not triggered and row["Score"] <= 0:
-            return  # Skip components with no patterns and no score
-        
-        # Write each triggered pattern as a row
-        for i, p in enumerate(triggered):
-            is_last = (i == len(triggered) - 1)
-            writer.writerow([
-                comp_type,
-                row["name"],
-                f"{row['Score']:.3f}",
-                p,
-                PATTERN_DESCRIPTIONS[p],
-                PATTERN_QUESTIONS_PHASE1[p],
-                SURVEY_OPTIONS_1,
-                "",
-                SURVEY_QUESTION_2,
-                SURVEY_OPTIONS_2,
-                "",
-                SURVEY_QUESTION_3 if is_last else "",
-                SURVEY_OPTIONS_3 if is_last else "",
-                "",
-                ""
-            ])
-        
-        # If no pattern triggered but has UNI score
-        if not triggered and row["Score"] > 0:
-            writer.writerow([
-                comp_type,
-                row["name"],
-                f"{row['Score']:.3f}",
-                "-",
-                "Örüntü tetiklenmedi - yalnızca tek-boyutlu aykırılık katkısı (UNI) mevcut.",
-                "Bu bileşen için metrik değerleri görece uç konumda mı?",
-                SURVEY_OPTIONS_1,
-                "",
-                SURVEY_QUESTION_2,
-                SURVEY_OPTIONS_2,
-                "",
-                SURVEY_QUESTION_3,
-                SURVEY_OPTIONS_3,
-                "",
-                ""
-            ])
-    
-    # Applications - Top K
-    apps_sorted = apps_df.sort_values("Score", ascending=False).head(top_k)
-    app_patterns = ["WR", "RS", "CS", "SD"]
-    for _, row in apps_sorted.iterrows():
-        write_component_rows(writer, "Uygulama", row, app_patterns, app_patterns)
-    
-    # Topics - Top K
-    topics_sorted = topics_df.sort_values("Score", ascending=False).head(top_k)
-    topic_patterns = ["CB", "DC", "PA"]
-    for _, row in topics_sorted.iterrows():
-        write_component_rows(writer, "Konu", row, topic_patterns, topic_patterns)
-    
-    # Nodes - Top K
-    nodes_sorted = nodes_df.sort_values("Score", ascending=False).head(top_k)
-    node_patterns = ["IH"]
-    for _, row in nodes_sorted.iterrows():
-        write_component_rows(writer, "Çalışma Düğümü", row, node_patterns, node_patterns)
-    
-    # Libraries - Top K
-    if len(libs_df) > 0:
-        libs_sorted = libs_df.sort_values("Score", ascending=False).head(top_k)
-        lib_patterns = ["WUL", "CL"]
-        for _, row in libs_sorted.iterrows():
-            write_component_rows(writer, "Kütüphane", row, lib_patterns, lib_patterns)
-    
-    return output.getvalue()
-
-
 def write_results(path, apps_df, topics_df, nodes_df, libs_df, output_dir, top_k):
     """Write analysis results to a text file."""
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -823,13 +628,80 @@ def write_results(path, apps_df, topics_df, nodes_df, libs_df, output_dir, top_k
             ].to_string(index=False))
             f.write("\n")
 
-    # Write CSV expert survey
-    csv_file = output_dir / f"{path.stem}_expert_survey.csv"
-    csv_content = generate_expert_survey_csv(apps_df, topics_df, nodes_df, libs_df, top_k=10)
-    with open(csv_file, "w", encoding="utf-8-sig", newline="") as f:
-        f.write(csv_content)
-
     return output_file
+
+
+def generate_expert_template(path, apps_df, topics_df, nodes_df, libs_df, expert_dir):
+    """Generate expert evaluation template for a dataset.
+    
+    Creates experts/<dataset_name>/template.txt with all components
+    from the analysis results, ready for experts to fill in.
+    """
+    dataset_name = path.stem  # e.g. hub_application
+    template_dir = expert_dir / dataset_name
+    template_dir.mkdir(parents=True, exist_ok=True)
+    template_file = template_dir / "template.txt"
+
+    lines = []
+    lines.append(f"# UZMAN DEĞERLENDİRME ŞABLONU — {dataset_name}")
+    lines.append("# ========================================")
+    lines.append("# Uzman: [Adınızı yazın]")
+    lines.append("# Tarih: [Tarihi yazın]")
+    lines.append("#")
+    lines.append("# AÇIKLAMA:")
+    lines.append('# Bu değerlendirme, bileşenlerin "iyi/kötü" veya "hatalı/doğru" olduğunu')
+    lines.append("# belirlemeyi DEĞİL; sistemin genel yapısal örüntülerine kıyasla")
+    lines.append("# GÖRELİ OLARAK FARKLI/AYKIRI olup olmadığını tespit etmeyi amaçlar.")
+    lines.append("#")
+    lines.append("# Her bileşen için aşağıdaki değerlerden birini yazın:")
+    lines.append("#   E = Evet, YAPISAL AYKIRI")
+    lines.append("#       Bu bileşen, sistemdeki diğer benzer bileşenlere kıyasla")
+    lines.append("#       göreli olarak farklı/dikkat çekici bir yapısal örüntü sergiliyor.")
+    lines.append("#")
+    lines.append("#   H = Hayır, YAPISAL NORMAL")
+    lines.append("#       Bu bileşen, sistemin genel yapısal örüntüsüne uygun davranıyor.")
+    lines.append("#")
+    lines.append("# ÖNEMLİ:")
+    lines.append('# - "Tasarım gereği böyle" düşüncesi değerlendirmeyi ETKİLEMEZ.')
+    lines.append("# - Amaç: Mimari inceleme sırasında hangi bileşenlere özellikle dikkat")
+    lines.append("#   edilmesi gerektiğini belirlemek.")
+    lines.append("#")
+    lines.append("# ========================================")
+    lines.append("")
+
+    # Applications
+    apps_sorted = apps_df.sort_values("Score", ascending=False)
+    lines.append("[UYGULAMALAR]")
+    for name in apps_sorted["name"]:
+        lines.append(f"{name}: ")
+    lines.append("")
+
+    # Topics
+    topics_sorted = topics_df.sort_values("Score", ascending=False)
+    lines.append("[KONULAR]")
+    for name in topics_sorted["name"]:
+        lines.append(f"{name}: ")
+    lines.append("")
+
+    # Nodes
+    nodes_sorted = nodes_df.sort_values("Score", ascending=False)
+    lines.append("[ÇALIŞMA DÜĞÜMLERİ]")
+    for name in nodes_sorted["name"]:
+        lines.append(f"{name}: ")
+    lines.append("")
+
+    # Libraries
+    if len(libs_df) > 0:
+        libs_sorted = libs_df.sort_values("Score", ascending=False)
+        lines.append("[KÜTÜPHANELER]")
+        for name in libs_sorted["name"]:
+            lines.append(f"{name}: ")
+        lines.append("")
+
+    with open(template_file, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
+
+    return template_file
 
 
 # =============================
@@ -857,20 +729,22 @@ Example usage:
     
     base = Path(args.dataset_dir)
     output_dir = base.parent / "results"
+    expert_dir = base.parent / "experts"
     top_k = args.top
 
     print(f"Analyzing datasets in: {base}")
     print(f"Results will be saved to: {output_dir}")
+    print(f"Expert templates will be saved to: {expert_dir}")
     print(f"Top-K: {top_k}\n")
 
     for json_file in sorted(base.glob("*.json")):
-        # Skip expert_opinions.json
+        # Skip expert files
         if "expert" in json_file.name.lower():
             continue
         apps_df, topics_df, nodes_df, libs_df = analyze_dataset(json_file)
         output_file = write_results(json_file, apps_df, topics_df, nodes_df, libs_df, output_dir, top_k)
-        csv_file = output_dir / f"{json_file.stem}_expert_survey.csv"
-        print(f"✓ {json_file.name} → {output_file.name}, {csv_file.name}")
+        template_file = generate_expert_template(json_file, apps_df, topics_df, nodes_df, libs_df, expert_dir)
+        print(f"✓ {json_file.name} → {output_file.name}, {template_file.relative_to(base.parent)}")
 
 
 if __name__ == "__main__":
