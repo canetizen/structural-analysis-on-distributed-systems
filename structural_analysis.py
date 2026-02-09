@@ -455,16 +455,16 @@ def analyze_dataset(path):
 # =============================
 
 PATTERN_EXPLANATIONS = {
-    "WR": "R≥Q3 ∧ A≥Q3 | Bu uygulama sınırlı sayıda yayın kanalıyla geniş bir uygulama kümesine ulaşıyor mu?",
-    "RS": "RA≥Q3 ∨ RA≤Q1 | Bu uygulama ağırlıklı olarak yayıncı veya abone rolünde yoğunlaşıyor mu?",
-    "CS": "TC≥Q3 | Bu uygulama birçok farklı işlevsel bağlamda (konu kategorisinde) yer alıyor mu?",
-    "SD": "LE≥Q3 | Bu uygulama görece yüksek sayıda ortak kütüphaneye bağımlı mı?",
-    "CB": "C≥Q3 ∧ I≤Q1 | Bu konu çok sayıda uygulamayı dengeli biçimde birbirine bağlıyor mu?",
-    "DC": "I≥Q3 | Bu konu tek yönlü iletişim örüntüsü (yayın veya abonelik ağırlıklı) sergiliyor mu?",
-    "PA": "LCR≥Q3 | Bu konu ağırlıklı olarak düşük bağlantılı uygulamaları bir araya topluyor mu?",
-    "IH": "ND≥Q3 ∧ NID≥Q3 | Bu çalışma düğümünde yüksek uygulama yoğunluğu ve düğüm içi etkileşim yoğunluğu var mı?",
-    "WUL": "LC≥Q3 | Bu kütüphane çok sayıda uygulama tarafından kullanılıyor mu?",
-    "CL": "LCon≥Q3 | Bu kütüphanenin kullanımı belirli çalışma düğümlerinde yoğunlaşıyor mu?",
+    "WR": "R≥Q3 ∧ A≥Q3 | Does this application reach a wide set of applications through a limited number of publish channels?",
+    "RS": "RA≥Q3 ∨ RA≤Q1 | Does this application concentrate predominantly in a publisher or subscriber role?",
+    "CS": "TC≥Q3 | Does this application participate in many different functional contexts (topic categories)?",
+    "SD": "LE≥Q3 | Does this application depend on a relatively high number of shared libraries?",
+    "CB": "C≥Q3 ∧ I≤Q1 | Does this topic connect many applications in a balanced manner?",
+    "DC": "I≥Q3 | Does this topic exhibit a unidirectional communication pattern (publish- or subscribe-heavy)?",
+    "PA": "LCR≥Q3 | Does this topic predominantly aggregate low-connectivity applications?",
+    "IH": "ND≥Q3 ∧ NID≥Q3 | Does this worker node have high application density and high intra-node interaction density?",
+    "WUL": "LC≥Q3 | Is this library used by a large number of applications?",
+    "CL": "LCon≥Q3 | Is the usage of this library concentrated on specific worker nodes?",
 }
 
 
@@ -631,11 +631,11 @@ def write_results(path, apps_df, topics_df, nodes_df, libs_df, output_dir, top_k
     return output_file
 
 
-def generate_expert_template(path, apps_df, topics_df, nodes_df, libs_df, expert_dir):
+def generate_expert_template(path, apps_df, topics_df, nodes_df, libs_df, expert_dir, top_k=10):
     """Generate expert evaluation template for a dataset.
     
-    Creates experts/<dataset_name>/template.txt with all components
-    from the analysis results, ready for experts to fill in.
+    Creates experts/<dataset_name>/template.txt with top-K components
+    per category (sorted by Score), ready for experts to fill in.
     """
     dataset_name = path.stem  # e.g. hub_application
     template_dir = expert_dir / dataset_name
@@ -643,57 +643,58 @@ def generate_expert_template(path, apps_df, topics_df, nodes_df, libs_df, expert
     template_file = template_dir / "template.txt"
 
     lines = []
-    lines.append(f"# UZMAN DEĞERLENDİRME ŞABLONU — {dataset_name}")
+    lines.append(f"# EXPERT EVALUATION TEMPLATE — {dataset_name}")
     lines.append("# ========================================")
-    lines.append("# Uzman: [Adınızı yazın]")
-    lines.append("# Tarih: [Tarihi yazın]")
+    lines.append("# Expert: [Your name]")
+    lines.append("# Date: [Date]")
     lines.append("#")
-    lines.append("# AÇIKLAMA:")
-    lines.append('# Bu değerlendirme, bileşenlerin "iyi/kötü" veya "hatalı/doğru" olduğunu')
-    lines.append("# belirlemeyi DEĞİL; sistemin genel yapısal örüntülerine kıyasla")
-    lines.append("# GÖRELİ OLARAK FARKLI/AYKIRI olup olmadığını tespit etmeyi amaçlar.")
+    lines.append("# DESCRIPTION:")
+    lines.append('# This evaluation does NOT aim to determine whether components are')
+    lines.append("# \"good/bad\" or \"correct/incorrect\"; it aims to identify whether a")
+    lines.append("# component is RELATIVELY DIFFERENT/ATYPICAL compared to the system's")
+    lines.append("# overall structural patterns.")
     lines.append("#")
-    lines.append("# Her bileşen için aşağıdaki değerlerden birini yazın:")
-    lines.append("#   E = Evet, YAPISAL AYKIRI")
-    lines.append("#       Bu bileşen, sistemdeki diğer benzer bileşenlere kıyasla")
-    lines.append("#       göreli olarak farklı/dikkat çekici bir yapısal örüntü sergiliyor.")
+    lines.append("# For each component, enter one of the following values:")
+    lines.append("#   E = Yes, STRUCTURALLY ATYPICAL")
+    lines.append("#       This component exhibits a relatively different/notable structural")
+    lines.append("#       pattern compared to other similar components in the system.")
     lines.append("#")
-    lines.append("#   H = Hayır, YAPISAL NORMAL")
-    lines.append("#       Bu bileşen, sistemin genel yapısal örüntüsüne uygun davranıyor.")
+    lines.append("#   H = No, STRUCTURALLY NORMAL")
+    lines.append("#       This component conforms to the system's general structural pattern.")
     lines.append("#")
-    lines.append("# ÖNEMLİ:")
-    lines.append('# - "Tasarım gereği böyle" düşüncesi değerlendirmeyi ETKİLEMEZ.')
-    lines.append("# - Amaç: Mimari inceleme sırasında hangi bileşenlere özellikle dikkat")
-    lines.append("#   edilmesi gerektiğini belirlemek.")
+    lines.append("# IMPORTANT:")
+    lines.append('# - \"It is designed this way\" does NOT affect the evaluation.')
+    lines.append("# - Goal: Determine which components should receive special attention")
+    lines.append("#   during architectural review.")
     lines.append("#")
     lines.append("# ========================================")
     lines.append("")
 
-    # Applications
-    apps_sorted = apps_df.sort_values("Score", ascending=False)
-    lines.append("[UYGULAMALAR]")
+    # Applications (top-K)
+    apps_sorted = apps_df.sort_values("Score", ascending=False).head(top_k)
+    lines.append(f"[APPLICATIONS] (Top-{min(top_k, len(apps_df))})")
     for name in apps_sorted["name"]:
         lines.append(f"{name}: ")
     lines.append("")
 
-    # Topics
-    topics_sorted = topics_df.sort_values("Score", ascending=False)
-    lines.append("[KONULAR]")
+    # Topics (top-K)
+    topics_sorted = topics_df.sort_values("Score", ascending=False).head(top_k)
+    lines.append(f"[TOPICS] (Top-{min(top_k, len(topics_df))})")
     for name in topics_sorted["name"]:
         lines.append(f"{name}: ")
     lines.append("")
 
-    # Nodes
-    nodes_sorted = nodes_df.sort_values("Score", ascending=False)
-    lines.append("[ÇALIŞMA DÜĞÜMLERİ]")
+    # Nodes (top-K)
+    nodes_sorted = nodes_df.sort_values("Score", ascending=False).head(top_k)
+    lines.append(f"[NODES] (Top-{min(top_k, len(nodes_df))})")
     for name in nodes_sorted["name"]:
         lines.append(f"{name}: ")
     lines.append("")
 
-    # Libraries
+    # Libraries (top-K)
     if len(libs_df) > 0:
-        libs_sorted = libs_df.sort_values("Score", ascending=False)
-        lines.append("[KÜTÜPHANELER]")
+        libs_sorted = libs_df.sort_values("Score", ascending=False).head(top_k)
+        lines.append(f"[LIBRARIES] (Top-{min(top_k, len(libs_df))})")
         for name in libs_sorted["name"]:
             lines.append(f"{name}: ")
         lines.append("")
@@ -743,7 +744,7 @@ Example usage:
             continue
         apps_df, topics_df, nodes_df, libs_df = analyze_dataset(json_file)
         output_file = write_results(json_file, apps_df, topics_df, nodes_df, libs_df, output_dir, top_k)
-        template_file = generate_expert_template(json_file, apps_df, topics_df, nodes_df, libs_df, expert_dir)
+        template_file = generate_expert_template(json_file, apps_df, topics_df, nodes_df, libs_df, expert_dir, top_k)
         print(f"✓ {json_file.name} → {output_file.name}, {template_file.relative_to(base.parent)}")
 
 

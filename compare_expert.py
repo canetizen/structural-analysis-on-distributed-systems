@@ -80,11 +80,11 @@ def parse_expert_txt(path):
     """Parse expert evaluation TXT file.
     
     Format:
-    [UYGULAMALAR]
+    [APPLICATIONS]
     ComponentName: E
     ComponentName2: H
     
-    [KONULAR]
+    [TOPICS]
     TopicName: E
     ...
     """
@@ -99,10 +99,10 @@ def parse_expert_txt(path):
     }
     
     section_map = {
-        "[UYGULAMALAR]": "applications",
-        "[KONULAR]": "topics",
-        "[ÇALIŞMA DÜĞÜMLERİ]": "nodes",
-        "[KÜTÜPHANELER]": "libraries"
+        "[APPLICATIONS]": "applications",
+        "[TOPICS]": "topics",
+        "[NODES]": "nodes",
+        "[LIBRARIES]": "libraries"
     }
     
     current_section = None
@@ -114,9 +114,14 @@ def parse_expert_txt(path):
         if not line or line.startswith("#"):
             continue
         
-        # Check for section header
-        if line in section_map:
-            current_section = section_map[line]
+        # Check for section header (supports optional suffix like "(Top-10)")
+        matched_section = None
+        for header, section_key in section_map.items():
+            if line.startswith(header):
+                matched_section = section_key
+                break
+        if matched_section:
+            current_section = matched_section
             continue
         
         # Parse component evaluation
@@ -216,19 +221,19 @@ def print_table(all_results, num_experts, min_votes, output_file=None):
     lines = []
     
     lines.append("=" * 70)
-    lines.append("UZMAN DEĞERLENDİRME SONUÇLARI")
+    lines.append("EXPERT EVALUATION RESULTS")
     lines.append("=" * 70)
-    lines.append(f"Uzman sayısı: {num_experts}")
-    lines.append(f"Çoğunluk eşiği: ≥{min_votes} oy")
+    lines.append(f"Number of experts: {num_experts}")
+    lines.append(f"Majority threshold: ≥{min_votes} votes")
     lines.append("")
-    lines.append(f"{'Bileşen Türü':<20} {'K':<5} {'Kesinlik':<12} {'Duyarlık':<12} {'F1-Skoru':<12}")
+    lines.append(f"{'Component Type':<20} {'K':<5} {'Precision':<12} {'Recall':<12} {'F1-Score':<12}")
     lines.append("-" * 70)
     
     category_names = {
-        "applications": "Uygulama",
-        "topics": "Konu",
-        "nodes": "Çalışma Düğümü",
-        "libraries": "Kütüphane"
+        "applications": "Application",
+        "topics": "Topic",
+        "nodes": "Node",
+        "libraries": "Library"
     }
     
     for category, evaluations in all_results.items():
@@ -248,7 +253,7 @@ def print_table(all_results, num_experts, min_votes, output_file=None):
     
     # LaTeX table output
     lines.append("=" * 70)
-    lines.append("LaTeX TABLO FORMATI")
+    lines.append("LaTeX TABLE FORMAT")
     lines.append("=" * 70)
     lines.append("")
     
@@ -281,15 +286,15 @@ def print_table(all_results, num_experts, min_votes, output_file=None):
 def print_detailed_results(results, expert_evaluations_list, expert_anomalous_by_category, min_votes):
     """Print detailed comparison for debugging"""
     print("\n" + "=" * 70)
-    print("DETAYLI KARŞILAŞTIRMA")
+    print("DETAILED COMPARISON")
     print("=" * 70)
     
     categories = ["applications", "topics", "nodes", "libraries"]
     category_names = {
-        "applications": "UYGULAMALAR",
-        "topics": "KONULAR",
-        "nodes": "ÇALIŞMA DÜĞÜMLERİ",
-        "libraries": "KÜTÜPHANELER"
+        "applications": "APPLICATIONS",
+        "topics": "TOPICS",
+        "nodes": "NODES",
+        "libraries": "LIBRARIES"
     }
     
     for category in categories:
@@ -300,19 +305,19 @@ def print_detailed_results(results, expert_evaluations_list, expert_anomalous_by
         
         # System ranking
         system_items = sorted(results[category], key=lambda x: x["score"], reverse=True)
-        print("  Sistem Sıralaması (Score):")
+        print("  System Ranking (Score):")
         for i, item in enumerate(system_items[:10], 1):
             marker = "✓" if item["name"] in expert_anomalous_by_category.get(category, []) else " "
             print(f"    {marker} {i}. {item['name']} (Score: {item['score']:.3f})")
         
         # Expert ground truth
         expert_anomalous = expert_anomalous_by_category.get(category, [])
-        print(f"\n  Uzman Değerlendirmesi (≥{min_votes} oy ile aykırı):")
+        print(f"\n  Expert Assessment (atypical with ≥{min_votes} votes):")
         for name in expert_anomalous:
             print(f"    • {name}")
         
         if not expert_anomalous:
-            print("    (çoğunluk oyuna ulaşan bileşen yok)")
+            print("    (no component reached majority vote)")
 
 
 def main():
@@ -427,7 +432,7 @@ Expert evaluation files should be named: expert_1.txt, expert_2.txt, etc.
     # Print combined (averaged) results if multiple datasets
     if datasets_processed > 1:
         print(f"\n\n{'#'*70}")
-        print(f"BİRLEŞİK SONUÇLAR (Tüm dataset'ler üzerinden ortalama)")
+        print(f"COMBINED RESULTS (averaged across all datasets)")
         print(f"{'#'*70}")
         
         averaged_results = {}

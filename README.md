@@ -193,17 +193,15 @@ compared to other applications.
 
 ### Per-Dataset Table
 ```
-Bileşen Türü         K     Kesinlik     Duyarlık     F1-Skoru
+Component Type       K     Precision    Recall       F1-Score
 ----------------------------------------------------------------------
-Uygulama             3     0.67         0.50         0.57
-                     5     0.60         0.75         0.67
+Application          5     0.60         0.75         0.67
                      10    0.40         0.80         0.53
 ```
 
 ### LaTeX Table (copy-paste ready)
 ```latex
-\multirow{3}{*}{Uygulama} & 3 & 0.67 & 0.50 & 0.57 \\
- & 5 & 0.60 & 0.75 & 0.67 \\
+\multirow{2}{*}{Application} & 5 & 0.60 & 0.75 & 0.67 \\
  & 10 & 0.40 & 0.80 & 0.53 \\
 \hline
 ```

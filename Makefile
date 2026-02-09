@@ -7,51 +7,51 @@ MIN_VOTES = 3
 
 .PHONY: analyze compare compare-detailed compare-all clean-results clean-experts clean help
 
-## Analiz çalıştır → results/ + experts/*/template.txt oluşturur
+## Run analysis → generates results/ + experts/*/template.txt
 analyze:
 	$(PYTHON) structural_analysis.py $(DATASET_DIR) -k $(TOP_K)
 
-## Tek dataset karşılaştır (DATASET=hub_application)
+## Compare single dataset (DATASET=hub_application)
 compare:
 	$(PYTHON) compare_expert.py $(RESULTS_DIR)/$(DATASET)_results.txt -e $(EXPERTS_DIR) -m $(MIN_VOTES)
 
-## Tek dataset detaylı karşılaştır
+## Compare single dataset with detailed output
 compare-detailed:
 	$(PYTHON) compare_expert.py $(RESULTS_DIR)/$(DATASET)_results.txt -e $(EXPERTS_DIR) -m $(MIN_VOTES) --detailed
 
-## Tüm dataset'leri karşılaştır
+## Compare all datasets
 compare-all:
 	$(PYTHON) compare_expert.py $(RESULTS_DIR) -e $(EXPERTS_DIR) -m $(MIN_VOTES) --all
 
-## Tüm dataset'leri detaylı karşılaştır
+## Compare all datasets with detailed output
 compare-all-detailed:
 	$(PYTHON) compare_expert.py $(RESULTS_DIR) -e $(EXPERTS_DIR) -m $(MIN_VOTES) --all --detailed
 
-## Sonuç dosyalarını sil
+## Remove result files
 clean-results:
 	rm -f $(RESULTS_DIR)/*_results.txt
 
-## Uzman şablonlarını ve dataset klasörlerini sil
+## Remove expert templates and dataset folders
 clean-experts:
 	rm -rf $(EXPERTS_DIR)/*/
 
-## Tüm üretilen dosyaları sil
+## Remove all generated files
 clean: clean-results clean-experts
 
-## Sıfırdan çalıştır: analiz + karşılaştır
+## Run from scratch: analyze + compare
 all: analyze compare-all
 
 help:
-	@echo "Kullanım:"
-	@echo "  make analyze                  Tüm dataset'leri analiz et"
-	@echo "  make compare DATASET=hub_application   Tek dataset karşılaştır"
+	@echo "Usage:"
+	@echo "  make analyze                  Analyze all datasets"
+	@echo "  make compare DATASET=hub_application   Compare single dataset"
 	@echo "  make compare-detailed DATASET=hub_application"
-	@echo "  make compare-all              Tüm dataset'leri karşılaştır"
-	@echo "  make compare-all-detailed     Tüm dataset'leri detaylı karşılaştır"
-	@echo "  make clean                    Üretilen dosyaları sil"
-	@echo "  make all                      Analiz + karşılaştır"
+	@echo "  make compare-all              Compare all datasets"
+	@echo "  make compare-all-detailed     Compare all datasets with detailed output"
+	@echo "  make clean                    Remove generated files"
+	@echo "  make all                      Analyze + compare"
 	@echo ""
-	@echo "Parametreler:"
-	@echo "  TOP_K=10       Kategori başına gösterilecek bileşen sayısı"
-	@echo "  MIN_VOTES=3    Çoğunluk eşiği (varsayılan: 3/5)"
-	@echo "  DATASET=...    Dataset adı (compare/compare-detailed için)"
+	@echo "Parameters:"
+	@echo "  TOP_K=10       Number of components per category"
+	@echo "  MIN_VOTES=3    Majority threshold (default: 3/5)"
+	@echo "  DATASET=...    Dataset name (for compare/compare-detailed)"
