@@ -31,7 +31,7 @@ Specifically, it aims to:
 - evaluate **rule-based structural patterns** derived from relative metric behavior,
 - compute the **combined anomaly score** used for prioritization,
 - generate **expert evaluation templates** for each dataset,
-- compare system rankings with expert assessments using **Precision@K, Recall@K, F1@K**,
+- compare system rankings with expert assessments using **Precision@K, nDCG@K, and Fleiss' κ**,
 - analyze what types of architectural situations are captured or missed
   by the scoring model.
 
@@ -99,7 +99,8 @@ The implementation directly follows the **formulation layer** of the paper:
    - Per-dataset expert templates are auto-generated
    - Experts mark components as structurally atypical (E) or normal (H)
    - Majority voting (≥3 out of 5) determines ground truth
-   - Results compared via Precision@K, Recall@K, F1@K (K=5, 10)
+   - Precision@K and nDCG@K measure ranking quality (K=5, 10)
+   - Fleiss' κ measures inter-rater agreement among experts
 
 ---
 
@@ -193,16 +194,18 @@ compared to other applications.
 
 ### Per-Dataset Table
 ```
-Component Type       K     Precision    Recall       F1-Score
+Component Type       K     Prec@K       nDCG@K       Fleiss κ
 ----------------------------------------------------------------------
-Application          5     0.60         0.75         0.67
-                     10    0.40         0.80         0.53
+Application          5     0.80         0.82         0.71
+                     10    0.70         0.74
+Topic                5     0.80         0.85         0.76
+                     10    0.80         0.81
 ```
 
 ### LaTeX Table (copy-paste ready)
 ```latex
-\multirow{2}{*}{Application} & 5 & 0.60 & 0.75 & 0.67 \\
- & 10 & 0.40 & 0.80 & 0.53 \\
+\multirow{2}{*}{Application} & 5 & 0.80 & 0.82 & \multirow{2}{*}{0.71} \\
+ & 10 & 0.70 & 0.74 & \\
 \hline
 ```
 

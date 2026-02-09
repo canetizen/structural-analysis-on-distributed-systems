@@ -5,17 +5,18 @@ Expert Evaluation Comparison Tool
 
 Compares system structural analysis results with expert evaluations.
 Implements majority voting across multiple experts (≥3 out of 5).
-Computes Precision@K, Recall@K, F1@K for K=5, 10.
+Computes Precision@K, nDCG@K, and Fleiss' κ for K=5, 10.
 
 Expert evaluations are in simple TXT format:
 - One file per expert (expert_1.txt, expert_2.txt, etc.)
 - E = anomaly, H = not anomaly
 
 Output format matches paper Table format:
-- Component Type | K | Precision | Recall | F1-Score
+- Component Type | K | Prec@K | nDCG@K | Fleiss' κ
 """
 
 import argparse
+import math
 from pathlib import Path
 
 
@@ -179,45 +180,123 @@ def apply_majority_voting(expert_evaluations_list, category, min_votes=3):
     return anomalous
 
 
-def compute_precision_recall_f1(system_top_k, expert_anomalous):
-    """Compute Precision@K, Recall@K, F1@K"""
-    if not system_top_k:
-        return {"precision": 0.0, "recall": 0.0, "f1": 0.0}
+def compute_ndcg_at_k(ranked_names, expert_anomalous, k):
+    """Compute nDCG@K.
     
-    system_set = set(system_top_k)
+    Relevance is binary: 1 if expert majority says atypical, 0 otherwise.
+    Uses standard DCG with log2(i+1) discount.
+    """
     expert_set = set(expert_anomalous)
+    top_k = ranked_names[:k]
     
-    true_positives = len(system_set & expert_set)
+    # DCG@K
+    dcg = 0.0
+    for i, name in enumerate(top_k):
+        rel = 1.0 if name in expert_set else 0.0
+        dcg += rel / math.log2(i + 2)  # i is 0-indexed, formula uses log2(rank+1)
     
-    precision = true_positives / len(system_set) if system_set else 0.0
-    recall = true_positives / len(expert_set) if expert_set else 0.0
-    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
+    # IDCG@K: ideal ranking puts all relevant items first
+    num_relevant = min(len(expert_set), k)
+    idcg = sum(1.0 / math.log2(i + 2) for i in range(num_relevant))
     
-    return {
-        "precision": precision,
-        "recall": recall,
-        "f1": f1,
-        "true_positives": true_positives,
-        "system_count": len(system_set),
-        "expert_count": len(expert_set)
-    }
+    return dcg / idcg if idcg > 0 else 0.0
+
+
+def compute_fleiss_kappa(expert_evaluations_list, category):
+    """Compute Fleiss' kappa for inter-rater agreement.
+    
+    Measures agreement among multiple experts on binary classification
+    (E=atypical vs H=normal) for a given component category.
+    """
+    if len(expert_evaluations_list) < 2:
+        return None
+    
+    # Collect all component names rated in this category
+    all_names = set()
+    for expert_eval in expert_evaluations_list:
+        for comp in expert_eval.get(category, []):
+            all_names.add(comp["name"])
+    
+    if not all_names:
+        return None
+    
+    n_raters = len(expert_evaluations_list)
+    name_list = sorted(all_names)
+    N = len(name_list)
+    
+    # Build rating matrix: for each component, count E and H votes
+    matrix = []  # matrix[i] = [e_count, h_count]
+    for name in name_list:
+        e_count = 0
+        h_count = 0
+        for expert_eval in expert_evaluations_list:
+            for comp in expert_eval.get(category, []):
+                if comp["name"] == name:
+                    if comp.get("is_anomaly", False):
+                        e_count += 1
+                    else:
+                        h_count += 1
+                    break
+        matrix.append([e_count, h_count])
+    
+    # P_i for each subject: agreement proportion
+    P_sum = 0.0
+    for votes in matrix:
+        n_i = sum(votes)
+        if n_i <= 1:
+            continue
+        P_sum += (sum(v * v for v in votes) - n_i) / (n_i * (n_i - 1))
+    
+    P_bar = P_sum / N if N > 0 else 0.0
+    
+    # P_e: expected agreement by chance
+    total_ratings = sum(sum(row) for row in matrix)
+    if total_ratings == 0:
+        return None
+    
+    p_j_list = []
+    for j in range(2):  # 2 categories: E, H
+        col_sum = sum(matrix[i][j] for i in range(N))
+        p_j_list.append(col_sum / total_ratings)
+    
+    P_e = sum(p * p for p in p_j_list)
+    
+    if P_e >= 1.0:
+        return 1.0
+    
+    return (P_bar - P_e) / (1.0 - P_e)
 
 
 def evaluate_all_k_values(results, expert_anomalous, category, k_values=[5, 10]):
-    """Evaluate for multiple K values"""
+    """Evaluate Precision@K and nDCG@K for multiple K values."""
     evaluations = []
     
+    # Get full ranked list by score
+    sorted_items = sorted(results[category], key=lambda x: x["score"], reverse=True)
+    ranked_names = [item["name"] for item in sorted_items]
+    expert_set = set(expert_anomalous)
+    
     for k in k_values:
-        system_top_k = get_top_k_names(results, category, k)
-        metrics = compute_precision_recall_f1(system_top_k, expert_anomalous)
-        metrics["k"] = k
-        evaluations.append(metrics)
+        top_k = ranked_names[:k]
+        
+        # Precision@K
+        tp = len(set(top_k) & expert_set)
+        precision = tp / len(top_k) if top_k else 0.0
+        
+        # nDCG@K
+        ndcg = compute_ndcg_at_k(ranked_names, expert_anomalous, k)
+        
+        evaluations.append({
+            "k": k,
+            "precision": precision,
+            "ndcg": ndcg,
+        })
     
     return evaluations
 
 
-def print_table(all_results, num_experts, min_votes, output_file=None):
-    """Print results in paper table format"""
+def print_table(all_results, num_experts, min_votes, kappa_values=None, output_file=None):
+    """Print results in paper table format with Prec@K, nDCG@K, Fleiss' κ."""
     lines = []
     
     lines.append("=" * 70)
@@ -226,7 +305,7 @@ def print_table(all_results, num_experts, min_votes, output_file=None):
     lines.append(f"Number of experts: {num_experts}")
     lines.append(f"Majority threshold: ≥{min_votes} votes")
     lines.append("")
-    lines.append(f"{'Component Type':<20} {'K':<5} {'Precision':<12} {'Recall':<12} {'F1-Score':<12}")
+    lines.append(f"{'Component Type':<20} {'K':<5} {'Prec@K':<12} {'nDCG@K':<12} {'Fleiss κ':<12}")
     lines.append("-" * 70)
     
     category_names = {
@@ -240,13 +319,18 @@ def print_table(all_results, num_experts, min_votes, output_file=None):
         if not evaluations:
             continue
         display_name = category_names.get(category, category)
+        kappa = kappa_values.get(category) if kappa_values else None
+        kappa_str = f"{kappa:.2f}" if kappa is not None else "—"
+        
         for i, metrics in enumerate(evaluations):
             if i == 0:
                 cat_display = display_name
+                k_display = kappa_str
             else:
                 cat_display = ""
+                k_display = ""
             
-            lines.append(f"{cat_display:<20} {metrics['k']:<5} {metrics['precision']:<12.2f} {metrics['recall']:<12.2f} {metrics['f1']:<12.2f}")
+            lines.append(f"{cat_display:<20} {metrics['k']:<5} {metrics['precision']:<12.2f} {metrics['ndcg']:<12.2f} {k_display:<12}")
     
     lines.append("-" * 70)
     lines.append("")
@@ -261,13 +345,19 @@ def print_table(all_results, num_experts, min_votes, output_file=None):
         if not evaluations:
             continue
         display_name = category_names.get(category, category)
+        kappa = kappa_values.get(category) if kappa_values else None
+        kappa_str = f"{kappa:.2f}" if kappa is not None else "—"
+        n_rows = len(evaluations)
+        
         for i, metrics in enumerate(evaluations):
             if i == 0:
-                cat_display = f"\\multirow{{3}}{{*}}{{{display_name}}}"
+                cat_display = f"\\multirow{{{n_rows}}}{{*}}{{{display_name}}}"
+                k_col = f"\\multirow{{{n_rows}}}{{*}}{{{kappa_str}}}"
             else:
                 cat_display = ""
+                k_col = ""
             
-            lines.append(f"{cat_display} & {metrics['k']} & {metrics['precision']:.2f} & {metrics['recall']:.2f} & {metrics['f1']:.2f} \\\\")
+            lines.append(f"{cat_display} & {metrics['k']} & {metrics['precision']:.2f} & {metrics['ndcg']:.2f} & {k_col} \\\\")
         lines.append("\\hline")
     
     lines.append("")
@@ -367,6 +457,7 @@ Expert evaluation files should be named: expert_1.txt, expert_2.txt, etc.
 
     # Aggregate results across all datasets for combined table
     combined_results = {"applications": [], "topics": [], "nodes": [], "libraries": []}
+    combined_kappas = {"applications": [], "topics": [], "nodes": [], "libraries": []}
     datasets_processed = 0
 
     for result_file in result_files:
@@ -407,22 +498,27 @@ Expert evaluation files should be named: expert_1.txt, expert_2.txt, etc.
         # Parse results
         results = parse_results_txt(result_file)
         
-        # Apply majority voting for each category
+        # Apply majority voting and compute metrics for each category
         categories = ["applications", "topics", "nodes", "libraries"]
         expert_anomalous_by_category = {}
         dataset_results = {}
+        kappa_values = {}
         
         for category in categories:
             expert_anomalous = apply_majority_voting(expert_evaluations_list, category, args.min_votes)
             expert_anomalous_by_category[category] = expert_anomalous
             
+            kappa = compute_fleiss_kappa(expert_evaluations_list, category)
+            kappa_values[category] = kappa
+            
             if results[category]:
                 evaluations = evaluate_all_k_values(results, expert_anomalous, category)
                 dataset_results[category] = evaluations
                 combined_results[category].append(evaluations)
+                combined_kappas[category].append(kappa)
         
         # Print per-dataset results
-        print_table(dataset_results, len(expert_evaluations_list), args.min_votes)
+        print_table(dataset_results, len(expert_evaluations_list), args.min_votes, kappa_values)
         
         if args.detailed:
             print_detailed_results(results, expert_evaluations_list, expert_anomalous_by_category, args.min_votes)
@@ -436,36 +532,38 @@ Expert evaluation files should be named: expert_1.txt, expert_2.txt, etc.
         print(f"{'#'*70}")
         
         averaged_results = {}
+        avg_kappas = {}
         for category in ["applications", "topics", "nodes", "libraries"]:
             if not combined_results[category]:
                 continue
+            
+            # Average kappa across datasets
+            valid_kappas = [k for k in combined_kappas[category] if k is not None]
+            avg_kappas[category] = sum(valid_kappas) / len(valid_kappas) if valid_kappas else None
             
             # Average across datasets for each K
             k_values = [5, 10]
             avg_evaluations = []
             for ki, k in enumerate(k_values):
                 precisions = []
-                recalls = []
-                f1s = []
+                ndcgs = []
                 for dataset_evals in combined_results[category]:
                     if ki < len(dataset_evals):
                         precisions.append(dataset_evals[ki]["precision"])
-                        recalls.append(dataset_evals[ki]["recall"])
-                        f1s.append(dataset_evals[ki]["f1"])
+                        ndcgs.append(dataset_evals[ki]["ndcg"])
                 
                 if precisions:
                     avg_evaluations.append({
                         "k": k,
                         "precision": sum(precisions) / len(precisions),
-                        "recall": sum(recalls) / len(recalls),
-                        "f1": sum(f1s) / len(f1s)
+                        "ndcg": sum(ndcgs) / len(ndcgs)
                     })
             
             if avg_evaluations:
                 averaged_results[category] = avg_evaluations
         
         output_file = args.output if args.output else None
-        print_table(averaged_results, datasets_processed, args.min_votes, output_file)
+        print_table(averaged_results, datasets_processed, args.min_votes, avg_kappas, output_file)
 
 
 if __name__ == "__main__":
